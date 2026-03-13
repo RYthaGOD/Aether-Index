@@ -36,6 +36,38 @@ SELECT
 FROM raw_swaps
 GROUP BY 1, 2;
 
+-- Top Movers (24h): Tokens with highest price % change
+CREATE VIEW IF NOT EXISTS top_movers_24h AS
+WITH hourly_prices AS (
+    SELECT 
+        token_address,
+        last(price_usd ORDER BY timestamp) as current_price,
+        first(price_usd ORDER BY timestamp) as old_price
+    FROM raw_swaps
+    WHERE timestamp > current_timestamp - INTERVAL '24 hours'
+    GROUP BY token_address
+)
+SELECT 
+    token_address,
+    current_price,
+    old_price,
+    ((current_price - old_price) / old_price) * 100 as pct_change
+FROM hourly_prices
+WHERE old_price > 0
+ORDER BY pct_change DESC;
+
+-- Volume Clusters (1h): Tokens with anomalous volume spikes
+CREATE VIEW IF NOT EXISTS volume_clusters_1h AS
+SELECT 
+    token_address,
+    sum(volume_usd) as total_volume,
+    count(*) as trade_count
+FROM raw_swaps
+WHERE timestamp > current_timestamp - INTERVAL '1 hour'
+GROUP BY token_address
+HAVING total_volume > 1000 -- Filter for significant activity
+ORDER BY total_volume DESC;
+
 -- Note: In DuckDB, we often use 'COPY TO' for Parquet persistence.
 -- We'll implement the 1s, 1m, 1h aggregations using DuckDB's vectorized SQL
 -- at query time or as periodically flushed Parquet files.

@@ -11,6 +11,7 @@ export const config = {
     helius: {
         apiKey: process.env.HELIUS_API_KEY || '',
         webhookUrl: process.env.HELIUS_WEBHOOK_URL || '',
+        webhookSecret: process.env.HELIUS_WEBHOOK_SECRET || '',
     },
     sqlite: {
         filename: process.env.SQLITE_DB_PATH || './data/sqlite/sovereign.db',

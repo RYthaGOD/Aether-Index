@@ -34,3 +34,11 @@ CREATE INDEX idx_swaps_slot ON swaps(slot);
 CREATE INDEX idx_swaps_token_in ON swaps(token_in_address);
 CREATE INDEX idx_swaps_token_out ON swaps(token_out_address);
 CREATE INDEX idx_swaps_block_time ON swaps(block_time);
+
+CREATE TABLE IF NOT EXISTS creators (
+    address TEXT PRIMARY KEY,
+    reputation TEXT, -- 'CLEAN', 'SUSPICIOUS', 'RUGGER'
+    funded_by TEXT,
+    launch_count INTEGER,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

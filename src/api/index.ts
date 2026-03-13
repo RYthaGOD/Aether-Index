@@ -20,9 +20,38 @@ const typeDefs = gql`
         volume: Float
     }
 
+    type Subscription {
+        priceUpdated(tokenAddress: String!): Ohlcv
+        newSwap: Swap
+    }
+
+    type Swap {
+        signature: String
+        tokenIn: String
+        tokenOut: String
+        amountIn: Float
+        amountOut: Float
+        priceUsd: Float
+        dex: String
+    }
+
+    type TopMover {
+        tokenAddress: String
+        current_price: Float
+        pct_change: Float
+    }
+
+    type VolumeCluster {
+        tokenAddress: String
+        total_volume: Float
+        trade_count: Int
+    }
+
     type Query {
         getHistory(tokenAddress: String!, interval: String!): [Ohlcv]
         searchTokens(query: String!): [Token]
+        getTopMovers: [TopMover]
+        getVolumeClusters: [VolumeCluster]
     }
 `;
 
@@ -44,20 +73,83 @@ const resolvers = {
                 console.error('Error searching tokens:', err);
                 return [];
             }
+        },
+        getTopMovers: async () => {
+            try {
+                return await db.getTopMovers();
+            } catch (err) {
+                console.error('Error fetching top movers:', err);
+                return [];
+            }
+        },
+        getVolumeClusters: async () => {
+            try {
+                return await db.getVolumeClusters();
+            } catch (err) {
+                console.error('Error fetching volume clusters:', err);
+                return [];
+            }
+        }
+    },
+    Subscription: {
+        priceUpdated: {
+            subscribe: (_: any, { tokenAddress }: { tokenAddress: string }) => {
+                return pubsub.asyncIterator([`PRICE_UPDATED_${tokenAddress}`]);
+            }
+        },
+        newSwap: {
+            subscribe: () => pubsub.asyncIterator(['SWAP_UPDATED'])
         }
     }
 };
 
+import { createServer } from 'http';
+import { execute, subscribe } from 'graphql';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { pubsub } from '../worker/processor';
+import { WebhookReceiver } from './receiver';
+import { WebhookManager } from '../worker/webhook_manager';
+import { PriceOracle } from '../worker/parser';
+
+// ... defined typeDefs and resolvers ...
+
 async function startServer() {
     const app = express();
-    const server = new ApolloServer({ typeDefs, resolvers });
+    const httpServer = createServer(app);
+    
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+
+    const server = new ApolloServer({ 
+        schema,
+        plugins: [{
+            async serverWillStart() {
+                return {
+                    async drainServer() {
+                        subscriptionServer.close();
+                    }
+                };
+            }
+        }],
+    });
+
+    const subscriptionServer = SubscriptionServer.create(
+        { schema, execute, subscribe },
+        { server: httpServer, path: server.graphqlPath }
+    );
 
     await server.start();
     server.applyMiddleware({ app });
 
+    // Initialize Sovereign Components
+    WebhookReceiver.setup(app);
+    await WebhookManager.orchestrate();
+    await PriceOracle.refreshSolPrice();
+
     const PORT = process.env.PORT || 4000;
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
         console.log(`🚀 Gateway ready at http://localhost:${PORT}${server.graphqlPath}`);
+        console.log(`📡 Subscriptions ready at ws://localhost:${PORT}${server.graphqlPath}`);
     });
 }
 

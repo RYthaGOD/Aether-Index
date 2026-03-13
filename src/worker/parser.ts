@@ -15,7 +15,7 @@ export interface SwapEvent {
 }
 
 export class PriceOracle {
-    private static solPriceUsd: number = 20; 
+    private static solPriceUsd: number = 150; // Initial fallback, will be updated by refreshSolPrice
     private static SOL_MINT = 'So11111111111111111111111111111111111111112';
     private static USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
@@ -25,14 +25,22 @@ export class PriceOracle {
      */
     static async refreshSolPrice() {
         try {
+            // SOL/USDC Raydium Pool (OpenBook)
             const SOL_USDC_POOL = new PublicKey('58oQChx4yWmvKtnvZisPghYmoD6pYat8BfH6HEnToAtW');
             const accountInfo = await solanaConnection.getAccountInfo(SOL_USDC_POOL);
             
             if (accountInfo) {
-                // In a production scenario, we'd use a layout decoder for Raydium V4
-                // For this implementation, we simulate the ratio discovery
-                // this.solPriceUsd = calculatedPrice; 
-                console.log(`[Oracle] SOL Price Refreshed: $${this.solPriceUsd}`);
+                // Raydium V4 Layout decoding
+                // Layout: baseReserve (offset 432, 8 bytes), quoteReserve (offset 440, 8 bytes)
+                // Decimals: SOL (9), USDC (6)
+                const baseReserve = accountInfo.data.readBigUInt64LE(432);
+                const quoteReserve = accountInfo.data.readBigUInt64LE(440);
+                
+                const solAmount = Number(baseReserve) / 1e9;
+                const usdcAmount = Number(quoteReserve) / 1e6;
+                
+                this.solPriceUsd = usdcAmount / solAmount;
+                console.log(`[Oracle] Trustless SOL Price: $${this.solPriceUsd.toFixed(2)}`);
             }
         } catch (err) {
             console.error('[Oracle] Price refresh failed:', err);
@@ -81,8 +89,9 @@ export class SwapParser {
         const isJupiter = logs.some(log => log.includes('Jupiter') || log.includes('JUP6LkbZbZ9zaS8fXmBaWpHiPshNreDks5DWB6E9p6v'));
         const isOrca = logs.some(log => log.includes('whirlpool'));
         const isPhoenix = logs.some(log => log.includes('Phx21u2vY2q7mS1mlT9Y66id2YCcSp7A6iXmG4YY6Yd'));
+        const isMeteora = logs.some(log => log.includes('LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo') || log.includes('meteora'));
 
-        if (!isRaydium && !isJupiter && !isOrca && !isPhoenix) return [];
+        if (!isRaydium && !isJupiter && !isOrca && !isPhoenix && !isMeteora) return [];
 
         // 2. Identify Token Balance Changes (Source of Truth)
         // Works for both SPL and Token-2022 since RPC parses both into postTokenBalances.
@@ -118,7 +127,7 @@ export class SwapParser {
                 amountOut: tokenOut.change,
                 priceUsd: 0,
                 maker: tx.transaction.message.accountKeys[0].pubkey.toString(),
-                dex: isRaydium ? 'raydium' : isJupiter ? 'jupiter' : isOrca ? 'orca' : 'jupiter'
+                dex: isRaydium ? 'raydium' : isJupiter ? 'jupiter' : isOrca ? 'orca' : isMeteora ? 'meteora' : 'jupiter'
             };
             
             event.priceUsd = PriceOracle.resolvePrice(event);

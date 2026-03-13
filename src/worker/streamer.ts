@@ -2,6 +2,7 @@ import { PublicKey } from '@solana/web3.js';
 import { solanaConnection, config } from '../config';
 import { SwapParser } from './parser';
 import { db } from '../db/client';
+import axios from 'axios';
 import Client, { CommitmentLevel, SubscribeRequest } from '@triton-one/yellowstone-grpc';
 
 export class Streamer {
@@ -51,6 +52,7 @@ export class Streamer {
                 },
                 blocks: {},
                 blocksMeta: {},
+                transactionsStatus: {},
                 accountsDataSlice: [],
                 entry: {},
                 commitment: CommitmentLevel.CONFIRMED
@@ -144,26 +146,38 @@ export class Streamer {
         if (this.metadataQueue.has(mint)) return;
         this.metadataQueue.add(mint);
         
-        // Asynchronous enrichment to not block the stream
         setTimeout(async () => {
             try {
-                console.log(`[Discovery] Enriching Metadata: ${mint}`);
-                // In production, we'd fetch from Metaplex or Helius:
-                // const metadata = await fetchMetadata(mint);
+                console.log(`[Discovery] Enriching Metadata via DAS: ${mint}`);
                 
-                // For now, we seed the token registry with discovery data
-                await db.upsertToken({ 
-                    mint, 
-                    symbol: 'DISCOVERED', 
-                    name: `Token ${mint.slice(0, 4)}`, 
-                    decimals: 9 
+                const response = await axios.post(`https://mainnet.helius-rpc.com/?api-key=${config.helius.apiKey}`, {
+                    jsonrpc: "2.0",
+                    id: "my-id",
+                    method: "getAsset",
+                    params: {
+                        id: mint,
+                        displayOptions: { showFungible: true }
+                    }
                 });
+
+                const metadata = response.data.result;
+                if (metadata && metadata.content) {
+                    const info = {
+                        mint,
+                        symbol: metadata.content.metadata?.symbol || 'UNKNOWN',
+                        name: metadata.content.metadata?.name || 'Unknown Token',
+                        decimals: metadata.token_info?.decimals || 9
+                    };
+                    
+                    await db.upsertToken(info);
+                    console.log(`[Discovery] Successfully Enriched: ${info.symbol}`);
+                }
             } catch (err) {
-                console.error(`[Discovery] Failed to enrich ${mint}:`, err);
+                console.error(`[Discovery] DAS Enrichment Failed for ${mint}:`, err);
             } finally {
                 this.metadataQueue.delete(mint);
             }
-        }, 5000); 
+        }, 2000); 
     }
 
     async start() {
