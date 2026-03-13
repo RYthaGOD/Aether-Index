@@ -130,13 +130,13 @@
             <p>Access the raw AetherIndex feed via GraphQL or WebSocket.</p>
             
             <div class="endpoint">
-                <code>HTTP: http://localhost:4000/graphql</code>
-                <button class="copy-btn" onclick="copy('http://localhost:4000/graphql')">COPY</button>
+                <code id="http-endpoint">HTTP: [Deriving...]</code>
+                <button class="copy-btn" onclick="copyEndpoint('http-endpoint')">COPY</button>
             </div>
             
             <div class="endpoint">
-                <code>WSS: ws://localhost:4000/graphql</code>
-                <button class="copy-btn" onclick="copy('ws://localhost:4000/graphql')">COPY</button>
+                <code id="ws-endpoint">WSS: [Deriving...]</code>
+                <button class="copy-btn" onclick="copyEndpoint('ws-endpoint')">COPY</button>
             </div>
         </div>
 
@@ -144,7 +144,7 @@
             <h2>Quick Start</h2>
             <p>Fetch the latest SOL history in 2 seconds.</p>
             <pre>
-fetch('http://localhost:4000/graphql', {
+fetch(window.location.origin + '/graphql', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -167,9 +167,14 @@ fetch('http://localhost:4000/graphql', {
     </div>
 
     <script>
-        function copy(text) {
+        const origin = window.location.origin;
+        document.getElementById('http-endpoint').textContent = `HTTP: ${origin}/graphql`;
+        document.getElementById('ws-endpoint').textContent = `WSS: ${origin.replace('http', 'ws')}/graphql`;
+
+        function copyEndpoint(id) {
+            const text = document.getElementById(id).textContent.replace('HTTP: ', '').replace('WSS: ', '');
             navigator.clipboard.writeText(text);
-            alert('Copied to clipboard');
+            alert('Copied: ' + text);
         }
     </script>
 </body>
