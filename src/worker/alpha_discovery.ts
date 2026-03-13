@@ -11,20 +11,11 @@ export class AlphaDiscovery {
         try {
             console.log(`[AlphaDiscovery] Tracing creator: ${creator} for mint: ${mint}`);
             
-            // 1. Fetch Funding Source via Helius Wallet API (Beta)
-            // Note: Helius funded-by API helper
-            const response = await axios.post(`https://mainnet.helius-rpc.com/?api-key=${config.helius.apiKey}`, {
-                jsonrpc: "2.0",
-                id: "funding-trace",
-                method: "getAccountInfo", // Simulation: In real production, use the dedicated Helius Wallet API endpoint
-                params: [creator, { encoding: "jsonParsed" }]
-            });
-
-            // 2. Mock Logic for Serial Rugger Detection
-            // In a real implementation, we'd use the `/v0/addresses/${creator}/funded-by` endpoint
-            const fundedBy = 'Binance'; // Mocking exchange or known wallet
+            // 1. Fetch Funding Source via Helius Wallet API
+            const fundingResponse = await axios.get(`https://api.helius.xyz/v1/addresses/${creator}/funded-by?api-key=${config.helius.apiKey}`);
+            const fundedBy = fundingResponse.data?.fundingSource || 'Unknown/Direct';
             
-            // 3. Cluster Analysis: How many tokens has this creator launched?
+            // 2. Cluster Analysis: How many tokens has this creator launched?
             const creatorAssets = await axios.post(`https://mainnet.helius-rpc.com/?api-key=${config.helius.apiKey}`, {
                 jsonrpc: "2.0",
                 id: "creator-assets",
@@ -37,9 +28,13 @@ export class AlphaDiscovery {
             });
 
             const launchCount = creatorAssets.data.result?.total || 1;
-            const reputation = launchCount > 5 ? 'SUSPICIOUS' : 'CLEAN';
+            
+            // 3. Heuristic: Reputation based on launch density & funding
+            let reputation = 'CLEAN';
+            if (launchCount > 10) reputation = 'SUSPICIOUS';
+            if (fundedBy.toLowerCase().includes('mixer') || fundedBy.toLowerCase().includes('tornado')) reputation = 'RUGGER';
 
-            console.log(`[AlphaDiscovery] Creator: ${creator} | Launch Count: ${launchCount} | Status: ${reputation}`);
+            console.log(`[AlphaDiscovery] Creator: ${creator} | Funded: ${fundedBy} | Status: ${reputation}`);
 
             // 4. Persistence to SQLite
             await db.updateCreatorReputation(creator, reputation, fundedBy, launchCount);
