@@ -12,8 +12,9 @@ AetherIndex is a high-performance, developer-first indexing engine for the entir
 
 Traditional indexers depend on expensive cloud APIs. AetherIndex puts the power back in your hands:
 
-- **🛡️ Trustless Price Oracle**: No mocks. Prices are calculated on-chain by decoding Raydium V4 pool reserves. 100% trustless.
-- **📡 Hybrid Ingestion (gRPC + Webhooks)**: Support for Yellowstone gRPC and Helius Webhooks. Automated webhook orchestration ensures zero-config production setup.
+- **🛡️ Trustless Price Oracle**: No mocks. Prices are calculated on-chain by decoding Raydium V4, Orca Whirlpool, and Meteora DLMM pool reserves at the binary level.
+- **🛡️ Socket Guardian (Synthetic gRPC)**: Parallelized WebSocket redundancy beating $1,000/mo enterprise streams. Detects slot gaps and auto-patches data via RPC fallbacks.
+- **📡 Hybrid Ingestion**: Support for Parallel WebSockets, Yellowstone gRPC, and Helius Webhooks. 
 - **🏷️ DAS Metadata Enrichment**: Automatically resolves token names, symbols, and icons using the Helius Digital Asset Standard (DAS) API.
 - **🌩️ Advanced Alpha Discovery**: 
     - **Meteora DLMM Support**: Full parsing for the latest concentrated liquidity pools.
