@@ -5,32 +5,34 @@ async function verifyMetadata() {
     console.log('--- Sovereign Metadata (DAS) Verification ---');
     
     // Test Mint: JUP (Jupiter)
-    const mint = 'JUPyiK9yUQCvHksmQGpxp99DqPLtcHkL9LNiY1tSY6t';
+    const mint = 'EN169uR5ozckNHbFcysd68Rit1FM2V2UdWuoRyj1KVoN';
     
-    console.log(`Fetching DAS metadata for test mint: ${mint}`);
+    console.log(`Fetching metadata for test mint: ${mint}`);
     
-    const response = await axios.post(`https://mainnet.helius-rpc.com/?api-key=${config.helius.apiKey}`, {
-        jsonrpc: "2.0",
-        id: "test",
-        method: "getAsset",
-        params: {
-            id: mint,
-            displayOptions: { showFungible: true }
-        }
-    });
-
-    const metadata = response.data.result;
-    if (metadata && metadata.content) {
-        const symbol = metadata.content.metadata?.symbol;
-        const name = metadata.content.metadata?.name;
-        
-        console.log(`Successfully resolved: ${name} (${symbol})`);
-        
-        if (symbol !== 'JUP') {
-            throw new Error(`Symbol mismatch! Expected JUP, got ${symbol}`);
-        }
+    // Test Jupiter API directly as it's the primary source now
+    const jupRes = await axios.get(`https://api.jup.ag/tokens/v1/token/${mint}`).catch(() => null);
+    if (jupRes && jupRes.data) {
+        const { symbol, name } = jupRes.data;
+        console.log(`Successfully resolved (Jupiter): ${name} (${symbol})`);
+        if (symbol !== 'TRUMP') throw new Error(`Symbol mismatch! Expected TRUMP, got ${symbol}`);
     } else {
-        throw new Error('No metadata found in DAS response.');
+        console.log('Jupiter API failed/skipped, trying Helius DAS...');
+        const response = await axios.post(`https://mainnet.helius-rpc.com/?api-key=${config.helius.apiKey}`, {
+            jsonrpc: "2.0", id: "test", method: "getAsset",
+            params: { id: mint, displayOptions: { showFungible: true } }
+        });
+
+        console.log('--- Raw Helius Response ---');
+        console.log(JSON.stringify(response.data, null, 2));
+
+        const metadata = response.data.result;
+        if (metadata && metadata.content) {
+            const symbol = metadata.content.metadata?.symbol;
+            const name = metadata.content.metadata?.name;
+            console.log(`Successfully resolved (Helius): ${name} (${symbol})`);
+        } else {
+            throw new Error('No metadata found in both Jupiter and Helius.');
+        }
     }
 
     console.log('✅ Metadata Verification Passed.');

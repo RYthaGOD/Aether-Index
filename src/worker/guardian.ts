@@ -62,13 +62,25 @@ export class SocketGuardian {
         }
     }
 
+    private async fetchWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+        try {
+            return await fn();
+        } catch (err: any) {
+            if (retries > 0 && (err.message.includes('429') || err.message.includes('Rate limit'))) {
+                console.warn(`[Guardian] Rate limited. Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return this.fetchWithRetry(fn, retries - 1, delay * 2);
+            }
+            throw err;
+        }
+    }
+
     private async processSignature(signature: string) {
         try {
-            // Use main connection for fetching (or rotate)
-            const tx = await solanaConnection.getParsedTransaction(signature, {
+            const tx = await this.fetchWithRetry(() => solanaConnection.getParsedTransaction(signature, {
                 maxSupportedTransactionVersion: 0,
                 commitment: 'confirmed'
-            });
+            }));
 
             if (!tx) return;
             const events = await SwapParser.parseTransaction(tx);
@@ -86,15 +98,14 @@ export class SocketGuardian {
     private async patchGaps(startSlot: number, endSlot: number) {
         try {
             console.log(`[Guardian] Requesting block range ${startSlot} to ${endSlot} for gap patching...`);
-            // In a production environment, we would use getBlocks or getSignaturesForAddress
-            // For this implementation, we pull the last 100 signatures for the main DEX programs to ensure no loss.
             const programs = [
-                new PublicKey('675k1q2u71c6u2kzjd5L54Vf7U2z6u64f8D22C1u66v'),
-                new PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc')
+                new PublicKey('675k1q2u71c6u2kzjd5L54Vf7U2z6u64f8D22C1u66v'), // Raydium
+                new PublicKey('whirLbMiicVdio4qvUfM5KAg6Ct8VwpYzGff3uctyCc'), // Orca
+                new PublicKey('LBUZKhRxPF3XUpBCjp4YzTKgLccjZhTSDM9YuVaPwxo')  // Meteora
             ];
 
             for (const program of programs) {
-                const sigs = await solanaConnection.getSignaturesForAddress(program, { limit: 50 });
+                const sigs = await this.fetchWithRetry(() => solanaConnection.getSignaturesForAddress(program, { limit: 50 }));
                 for (const s of sigs) {
                     if (s.slot >= startSlot && s.slot <= endSlot && !this.seenSignatures.has(s.signature)) {
                         console.log(`[Guardian] PATCHING MISSED TX: ${s.signature}`);

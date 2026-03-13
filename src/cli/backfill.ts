@@ -11,34 +11,43 @@ import { PublicKey } from '@solana/web3.js';
 async function backfill(startSlot: number, endSlot: number) {
     console.log(`--- Sovereign Re-Sync Started: Slot ${startSlot} to ${endSlot} ---`);
     
-    let currentSlot = startSlot;
-    const BATCH_SIZE = 10;
+    const PARALLEL_BATCH_SIZE = 5;
 
-    while (currentSlot <= endSlot) {
-        console.log(`[Backfill] Processing batch: ${currentSlot} to ${currentSlot + BATCH_SIZE}...`);
-        
-        try {
-            // 1. Fetch block with full transaction details
-            const block = await solanaConnection.getParsedBlock(currentSlot, {
-                maxSupportedTransactionVersion: 0,
-                commitment: 'confirmed'
-            });
+    for (let slot = startSlot; slot <= endSlot; slot += PARALLEL_BATCH_SIZE) {
+        const batchEnd = Math.min(slot + PARALLEL_BATCH_SIZE - 1, endSlot);
+        console.log(`[Backfill] Syncing Slots: ${slot} -> ${batchEnd}...`);
 
-            if (block && block.transactions) {
-                console.log(`[Backfill] Found ${block.transactions.length} transactions at slot ${currentSlot}`);
-                
-                for (const tx of block.transactions) {
-                    const swaps = await SwapParser.parseTransaction(tx as any);
-                    for (const swap of swaps) {
-                        await DataProcessor.processSwap(swap);
+        const promises = [];
+        for (let s = slot; s <= batchEnd; s++) {
+            promises.push((async (targetSlot: number) => {
+                try {
+                    const block = await solanaConnection.getParsedBlock(targetSlot, {
+                        maxSupportedTransactionVersion: 0,
+                        commitment: 'confirmed'
+                    });
+
+                    if (block && block.transactions) {
+                        let swapCount = 0;
+                        for (const tx of block.transactions) {
+                            const swaps = await SwapParser.parseTransaction(tx as any);
+                            for (const swap of swaps) {
+                                await DataProcessor.processSwap(swap);
+                                swapCount++;
+                            }
+                        }
+                        console.log(`[Backfill] Slot ${targetSlot}: Processed ${swapCount} swaps.`);
+                    }
+                } catch (err: any) {
+                    if (err.message.includes('not found') || err.message.includes('skipped')) {
+                        // Expected for skipped slots
+                    } else {
+                        console.warn(`[Backfill] Slot ${targetSlot} Error:`, err.message);
                     }
                 }
-            }
-        } catch (err) {
-            console.warn(`[Backfill] Skip slot ${currentSlot}:`, (err as any).message);
+            })(s));
         }
 
-        currentSlot++;
+        await Promise.all(promises);
     }
 
     console.log('✅ Sovereign Re-Sync Complete.');

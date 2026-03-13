@@ -24,8 +24,10 @@ export class WebhookReceiver {
         app.use(express.json());
 
         app.post('/helius-webhook', async (req, res) => {
-            // In a production scenario, we'd verify the signature:
-            // if (!this.verifySignature(req)) return res.status(401).send('Unauthorized');
+            if (!this.verifySignature(req)) {
+                console.warn('[Webhook] Unauthorized request blocked.');
+                return res.status(401).send('Unauthorized');
+            }
 
             const transactions = req.body;
             console.log(`[Webhook] Received ${transactions.length} transactions.`);

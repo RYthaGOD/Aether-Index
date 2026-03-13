@@ -25,7 +25,7 @@ export const config = {
         webhookSecret: process.env.HELIUS_WEBHOOK_SECRET || '',
     },
     sqlite: {
-        filename: process.env.SQLITE_DB_PATH || './data/sqlite/sovereign.db',
+        filename: process.env.SQLITE_DB_PATH || process.env.SQLITE_PATH || './data/sqlite/sovereign.db',
     },
     duckdb: {
         filename: process.env.DUCKDB_PATH || './data/parquet/analytics.duckdb',
@@ -33,7 +33,8 @@ export const config = {
     redis: {
         // Now optional or used for local pub/sub only
         url: process.env.REDIS_URL || 'redis://localhost:6379',
-    }
+    },
+    isReadOnly: process.env.READ_ONLY === 'true'
 };
 
 export const solanaConnection = new Connection(config.solana.rpcUrl, {

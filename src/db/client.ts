@@ -8,6 +8,8 @@ import { SwapEvent } from '../worker/parser';
 class DBClient {
     private sqlite: sqlite3.Database;
     private duckdb: Database;
+    private duckdbCon: any;
+    private knownTokens: Set<string> = new Set();
 
     constructor() {
         // Ensure directories exist
@@ -18,17 +20,16 @@ class DBClient {
 
         this.sqlite = new sqlite3.Database(config.sqlite.filename);
         this.duckdb = new Database(config.duckdb.filename);
+        this.duckdbCon = this.duckdb.connect();
         
         // Performance & Durability: Enable Write-Ahead Logging for SQLite
         this.sqlite.run('PRAGMA journal_mode=WAL');
     }
 
-    async init() {
+    async initSqliteOnly() {
         return new Promise<void>((resolve, reject) => {
             const schemaPath = path.join(__dirname, 'sqlite_schema.sql');
-            if (!fs.existsSync(schemaPath)) {
-                return resolve(); // Skip if schema not found during distribution
-            }
+            if (!fs.existsSync(schemaPath)) return resolve();
             const schema = fs.readFileSync(schemaPath, 'utf-8');
             this.sqlite.exec(schema, (err: Error | null) => {
                 if (err) reject(err);
@@ -37,6 +38,36 @@ class DBClient {
                     resolve();
                 }
             });
+        });
+    }
+
+    async init() {
+        await this.initSqliteOnly();
+        return new Promise<void>((resolve, reject) => {
+            const duckdbSchemaPath = path.join(__dirname, 'duckdb_schema.sql');
+            try {
+                const duckdbSchema = fs.readFileSync(duckdbSchemaPath, 'utf-8');
+                const statements = duckdbSchema.split(';').map(s => s.trim()).filter(s => s.length > 0);
+                
+                // Execute statements strictly sequentially
+                (async () => {
+                    for (const statement of statements) {
+                        await new Promise<void>((resolveStmt) => {
+                            this.duckdbCon.run(statement, (err: any) => {
+                                if (err) {
+                                    console.warn('DuckDB Init Notice:', err.message, '| Statement:', statement.slice(0, 50));
+                                }
+                                resolveStmt();
+                            });
+                        });
+                    }
+                    console.log('DuckDB Full Schema Initialized (Sequential).');
+                    resolve();
+                })().catch(reject);
+            } catch (err) {
+                console.error('Failed to load DuckDB schema file:', err);
+                resolve(); 
+            }
         });
     }
 
@@ -56,64 +87,161 @@ class DBClient {
         });
     }
 
-    async upsertToken(token: { mint: string, symbol: string, name: string, decimals: number }) {
+    async upsertToken(token: { mint: string, symbol: string, name: string, decimals: number, rank?: number, is_top_100?: boolean }) {
+        this.knownTokens.add(token.mint);
         return new Promise<void>((resolve, reject) => {
             this.sqlite.run(`
-                INSERT INTO tokens (address, symbol, name, decimals)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO tokens (address, symbol, name, decimals, rank, is_top_100)
+                VALUES (?, ?, ?, ?, ?, ?)
                 ON CONFLICT(address) DO UPDATE SET
                     symbol = excluded.symbol,
                     name = excluded.name,
-                    decimals = excluded.decimals
-            `, [token.mint, token.symbol, token.name, token.decimals], (err: Error | null) => {
+                    decimals = excluded.decimals,
+                    rank = COALESCE(excluded.rank, tokens.rank),
+                    is_top_100 = COALESCE(excluded.is_top_100, tokens.is_top_100)
+            `, [token.mint, token.symbol, token.name, token.decimals, token.rank || null, token.is_top_100 ? 1 : 0], (err: Error | null) => {
                 if (err) return reject(err);
                 
-                const con = this.duckdb.connect();
-                con.run(`
-                    INSERT INTO tokens (mint, symbol, name, decimals)
-                    VALUES (?, ?, ?, ?)
-                    ON CONFLICT(mint) DO UPDATE SET
-                        symbol = excluded.symbol,
-                        name = excluded.name,
-                        decimals = excluded.decimals
-                `, [token.mint, token.symbol, token.name, token.decimals], (err2: Error | null) => {
-                    if (err2) reject(err2);
-                    else resolve();
+                // DuckDB: DELETE then INSERT for maximum compatibility on Windows/older versions
+                this.duckdbCon.run('DELETE FROM tokens WHERE mint = ?', token.mint, (errD: any) => {
+                    if (errD) console.error('DuckDB Token Delete Error:', errD.message);
+                    
+                    this.duckdbCon.run(`
+                        INSERT INTO tokens (mint, symbol, name, decimals, rank, is_top_100)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                    `, 
+                    token.mint, 
+                    token.symbol, 
+                    token.name, 
+                    token.decimals || 0, 
+                    token.rank || null, 
+                    token.is_top_100 ? 1 : 0, 
+                    (err2: Error | null) => {
+                        if (err2) {
+                            console.error(`DuckDB Token Insert Error for ${token.mint}:`, err2.message);
+                        } else {
+                            console.log(`[DB] DuckDB Token Populated: ${token.symbol}`);
+                        }
+                        resolve(); 
+                    });
                 });
+            });
+        });
+    }
+
+    async tokenExists(mint: string): Promise<boolean> {
+        if (this.knownTokens.has(mint)) return true;
+        
+        return new Promise((resolve) => {
+            this.sqlite.get('SELECT address FROM tokens WHERE address = ?', [mint], (err, row) => {
+                if (row) {
+                    this.knownTokens.add(mint);
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            });
+        });
+    }
+
+    async upsertTokenPool(pool: { mint: string, dex: string, poolAddress: string, liquidityUsd: number }) {
+        return new Promise<void>((resolve, reject) => {
+            this.sqlite.run(`
+                INSERT INTO token_pools (mint, dex, pool_address, liquidity_usd, last_updated)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+                ON CONFLICT(pool_address) DO UPDATE SET
+                    liquidity_usd = excluded.liquidity_usd,
+                    last_updated = CURRENT_TIMESTAMP
+            `, [pool.mint, pool.dex, pool.poolAddress, pool.liquidityUsd], (err: Error | null) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+    }
+
+    async getTop100Tokens() {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT address as mint, symbol, name, decimals, rank 
+                FROM tokens 
+                WHERE is_top_100 = 1
+                ORDER BY rank ASC
+                LIMIT 100
+            `;
+            this.sqlite.all(sql, [], (err: Error | null, res: any) => {
+                if (err) reject(err);
+                else resolve(res);
+            });
+        });
+    }
+
+    async getBestPool(mint: string): Promise<{ dex: string, pool_address: string } | null> {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT dex, pool_address 
+                FROM token_pools 
+                WHERE mint = ?
+                ORDER BY liquidity_usd DESC
+                LIMIT 1
+            `;
+            this.sqlite.get(sql, [mint], (err: Error | null, row: any) => {
+                if (err) reject(err);
+                else resolve(row || null);
             });
         });
     }
 
     async insertToDuckDB(swaps: Array<SwapEvent & { side?: 'buy' | 'sell' }>) {
         if (swaps.length === 0) return;
-        const con = this.duckdb.connect();
         
-        con.run('BEGIN TRANSACTION');
-        try {
-            for (const s of swaps) {
-                const side = s.side || (s.tokenIn === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || s.tokenIn === 'So11111111111111111111111111111111111111112' ? 'buy' : 'sell');
+        // Use a persistent connection for batch performance
+        const con = this.duckdbCon;
+        
+        return new Promise<void>((resolve, reject) => {
+            con.run('BEGIN TRANSACTION', (err: any) => {
+                if (err) return reject(err);
                 
-                con.run(`
-                    INSERT INTO raw_swaps (timestamp, token_address, price_usd, volume_usd, side, signature, slot, dex_id, maker)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                `, 
-                    s.blockTime.getTime(),
-                    side === 'buy' ? s.tokenOut : s.tokenIn,
-                    s.priceUsd,
-                    (side === 'buy' ? s.amountOut : s.amountIn) * s.priceUsd,
-                    side,
-                    s.signature,
-                    s.slot,
-                    s.dex,
-                    s.maker,
-                    (err: any) => { if (err) console.error('DuckDB row insert error:', err); }
-                );
-            }
-            con.run('COMMIT');
-        } catch (err: any) {
-            con.run('ROLLBACK');
-            throw err;
-        }
+                let completed = 0;
+                let hasError = false;
+
+                const checkDone = (errI?: any) => {
+                    if (errI && !hasError) {
+                        hasError = true;
+                        con.run('ROLLBACK', () => reject(errI));
+                        return;
+                    }
+                    completed++;
+                    if (completed === swaps.length && !hasError) {
+                        con.run('COMMIT', (errC: any) => {
+                            if (errC) reject(errC);
+                            else resolve();
+                        });
+                    }
+                };
+
+                for (const s of swaps) {
+                    const side = s.side || (s.tokenIn === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || s.tokenIn === 'So11111111111111111111111111111111111111112' ? 'buy' : 'sell');
+                    const tokenAddress = side === 'buy' ? s.tokenOut : s.tokenIn;
+                    const volumeUsd = (side === 'buy' ? s.amountOut : s.amountIn) * s.priceUsd;
+
+                    con.run(`
+                        INSERT INTO raw_swaps (timestamp, token_address, price_usd, volume_usd, side, signature, slot, dex_id, maker)
+                        VALUES (to_timestamp(?), ?, ?, ?, ?, ?, ?, ?, ?)
+                    `, 
+                        s.blockTime.getTime() / 1000, 
+                        tokenAddress,
+                        s.priceUsd,
+                        volumeUsd,
+                        side,
+                        s.signature,
+                        s.slot,
+                        s.dex,
+                        s.maker,
+                        checkDone
+                    );
+                }
+            });
+        });
     }
 
     async updateSyncState(slot: number) {
@@ -210,6 +338,42 @@ class DBClient {
             `, [address, reputation, fundedBy, launchCount], (err: Error | null) => {
                 if (err) reject(err);
                 else resolve();
+            });
+        });
+    }
+
+    async validateApiKey(apiKey: string): Promise<{ tier: string, rateLimitRpm: number } | null> {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT tier, rate_limit_rpm 
+                FROM subscriptions 
+                WHERE api_key = ? AND (expires_at IS NULL OR expires_at > CURRENT_TIMESTAMP)
+            `;
+            this.sqlite.get(sql, [apiKey], (err: Error | null, row: any) => {
+                if (err) reject(err);
+                else if (row) resolve({ tier: row.tier, rateLimitRpm: row.rate_limit_rpm });
+                else resolve(null);
+            });
+        });
+    }
+
+    async createSubscription(apiKey: string, tier: string, rateLimit: number = 60) {
+        return new Promise<void>((resolve, reject) => {
+            this.sqlite.run(`
+                INSERT INTO subscriptions (api_key, tier, rate_limit_rpm)
+                VALUES (?, ?, ?)
+            `, [apiKey, tier, rateLimit], (err: Error | null) => {
+                if (err) reject(err);
+                else resolve();
+            });
+        });
+    }
+
+    async queryDuckDB(sql: string, params: any[] = []): Promise<any[]> {
+        return new Promise((resolve, reject) => {
+            this.duckdbCon.all(sql, ...params, (err: Error | null, res: any) => {
+                if (err) reject(err);
+                else resolve(res);
             });
         });
     }

@@ -40,42 +40,16 @@ export class Streamer {
         
         setTimeout(async () => {
             try {
-                console.log(`[Discovery] Enriching Metadata via DAS: ${mint}`);
-                
-                const response = await axios.post(`https://mainnet.helius-rpc.com/?api-key=${config.helius.apiKey}`, {
-                    jsonrpc: "2.0",
-                    id: "my-id",
-                    method: "getAsset",
-                    params: {
-                        id: mint,
-                        displayOptions: { showFungible: true }
-                    }
-                });
-
-                const metadata = response.data.result;
-                if (metadata && metadata.content) {
-                    const info = {
-                        mint,
-                        symbol: metadata.content.metadata?.symbol || 'UNKNOWN',
-                        name: metadata.content.metadata?.name || 'Unknown Token',
-                        decimals: metadata.token_info?.decimals || 9
-                    };
-                    
-                    await db.upsertToken(info);
-                    console.log(`[Discovery] Successfully Enriched: ${info.symbol}`);
-                }
+                console.log(`[Discovery] Enriching Metadata: ${mint}`);
+                await PriceOracle.resolveTokenMetadata(mint);
+                console.log(`[Discovery] Successfully Enriched/Verified: ${mint}`);
             } catch (err) {
-                console.error(`[Discovery] DAS Enrichment Failed for ${mint}:`, err);
+                console.error(`[Discovery] Metadata Enrichment Failed for ${mint}:`, err);
             } finally {
                 this.metadataQueue.delete(mint);
             }
         }, 2000); 
     }
-}
-
-if (require.main === module) {
-    const streamer = new Streamer();
-    streamer.start().catch(console.error);
 }
 
 if (require.main === module) {

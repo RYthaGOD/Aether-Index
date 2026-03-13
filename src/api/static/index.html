@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherIndex | The Sovereign Standard</title>
+    <style>
+        :root {
+            --black: #000000;
+            --yellow: #FFD700;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, sans-serif;
+        }
+        body {
+            background-color: var(--black);
+            color: var(--yellow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 2rem;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 800px;
+            animation: fadeIn 1.5s ease-out;
+        }
+        h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            letter-spacing: -2px;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+        p.subtitle {
+            font-size: 1.25rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            margin-bottom: 3rem;
+            color: var(--yellow);
+            opacity: 0.8;
+        }
+        .features {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 4rem;
+            justify-content: center;
+        }
+        .feature {
+            border: 1px solid var(--yellow);
+            padding: 1rem 2rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .cta-group {
+            display: flex;
+            gap: 1.5rem;
+            justify-content: center;
+        }
+        .btn {
+            padding: 1rem 2.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            letter-spacing: 2px;
+        }
+        .btn-fill {
+            background-color: var(--yellow);
+            color: var(--black);
+            border: 2px solid var(--yellow);
+        }
+        .btn-fill:hover {
+            background-color: var(--black);
+            color: var(--yellow);
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--yellow);
+            border: 2px solid var(--yellow);
+        }
+        .btn-outline:hover {
+            background-color: var(--yellow);
+            color: var(--black);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .flash-line {
+            width: 100vw;
+            height: 2px;
+            background: var(--yellow);
+            position: absolute;
+            top: 20%;
+            left: -100%;
+            animation: lightning 3s infinite linear;
+            opacity: 0.2;
+        }
+        @keyframes lightning {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="flash-line"></div>
+    <div class="container">
+        <h1>AetherIndex</h1>
+        <p class="subtitle">The Sovereign Solana Data Engine</p>
+        
+        <div class="features">
+            <div class="feature">Raw On-Chain Data</div>
+            <div class="feature">No Middleman</div>
+            <div class="feature">Institutional Speed</div>
+        </div>
+
+        <div class="cta-group">
+            <a href="/dashboard" class="btn btn-outline">Launch Engine</a>
+            <a href="/dev" class="btn btn-fill">Developer Portal</a>
+        </div>
+    </div>
+</body>
+</html>

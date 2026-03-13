@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherIndex | Developer Portal</title>
+    <style>
+        :root {
+            --black: #000000;
+            --yellow: #FFD700;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+        body {
+            background-color: var(--black);
+            color: var(--yellow);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+        header {
+            border-bottom: 2px solid var(--yellow);
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 {
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .back-link {
+            color: var(--yellow);
+            text-decoration: none;
+            font-size: 0.8rem;
+            border: 1px solid var(--yellow);
+            padding: 0.3rem 0.8rem;
+        }
+        .back-link:hover {
+            background: var(--yellow);
+            color: var(--black);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .card {
+            background: var(--black);
+            border: 1px solid var(--yellow);
+            padding: 1.5rem;
+            position: relative;
+        }
+        .card h2 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            color: var(--black);
+            background: var(--yellow);
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+        }
+        .endpoint {
+            background: #000;
+            padding: 1rem;
+            border: 1px solid var(--yellow);
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .endpoint code {
+            color: var(--yellow);
+        }
+        .copy-btn {
+            background: var(--yellow);
+            color: var(--black);
+            border: none;
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.7rem;
+        }
+        .copy-btn:active {
+            opacity: 0.7;
+        }
+        pre {
+            background: var(--black);
+            padding: 1rem;
+            overflow-x: auto;
+            border-left: 3px solid var(--yellow);
+            margin-top: 1rem;
+            font-size: 0.85rem;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            margin-top: 2rem;
+        }
+        .pulse {
+            width: 10px;
+            height: 10px;
+            background: var(--yellow);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 1; }
+            70% { transform: scale(1.5); opacity: 0; }
+            100% { transform: scale(0.9); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AetherIndex // DEV_PORTAL</h1>
+        <a href="/" class="back-link">EXIT_TO_MAIN</a>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Endpoints</h2>
+            <p>Access the raw AetherIndex feed via GraphQL or WebSocket.</p>
+            
+            <div class="endpoint">
+                <code>HTTP: http://localhost:4000/graphql</code>
+                <button class="copy-btn" onclick="copy('http://localhost:4000/graphql')">COPY</button>
+            </div>
+            
+            <div class="endpoint">
+                <code>WSS: ws://localhost:4000/graphql</code>
+                <button class="copy-btn" onclick="copy('ws://localhost:4000/graphql')">COPY</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Quick Start</h2>
+            <p>Fetch the latest SOL history in 2 seconds.</p>
+            <pre>
+fetch('http://localhost:4000/graphql', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    query: `{ 
+      getHistory(tokenAddress: "So11111111111111111111111111111111111111112", 
+                 interval: "1m") { 
+        close 
+        volume 
+      } 
+    }`
+  })
+}).then(res => res.json()).then(console.log);
+            </pre>
+        </div>
+    </div>
+
+    <div class="status">
+        <div class="pulse"></div>
+        <span>SOVEREIGN ENGINE: ACTIVE</span>
+    </div>
+
+    <script>
+        function copy(text) {
+            navigator.clipboard.writeText(text);
+            alert('Copied to clipboard');
+        }
+    </script>
+</body>
+</html>

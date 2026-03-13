@@ -7,8 +7,20 @@ CREATE TABLE IF NOT EXISTS tokens (
     name TEXT,
     decimals INTEGER NOT NULL,
     logo_url TEXT,
+    rank INTEGER,
+    is_top_100 INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS token_pools (
+    mint TEXT NOT NULL,
+    dex TEXT NOT NULL, -- 'raydium', 'orca', 'meteora'
+    pool_address TEXT PRIMARY KEY,
+    liquidity_usd REAL,
+    last_updated DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_token_pools_mint ON token_pools(mint);
 
 CREATE TABLE IF NOT EXISTS swaps (
     signature TEXT PRIMARY KEY,
@@ -42,3 +54,15 @@ CREATE TABLE IF NOT EXISTS creators (
     launch_count INTEGER,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+    api_key TEXT PRIMARY KEY,
+    tier TEXT NOT NULL, -- 'FREE', 'PREMIUM', 'INSTITUTIONAL'
+    owner_address TEXT,
+    rate_limit_rpm INTEGER DEFAULT 60,
+    expires_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscriptions_tier ON subscriptions(tier);

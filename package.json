@@ -7,8 +7,9 @@
     "aetherindex": "./bin/index.js"
   },
   "scripts": {
+    "build": "tsc",
+    "start": "node dist/api/index.js",
     "dev": "ts-node src/api/index.ts",
-    "start": "node dist/api/index.ts",
     "backfill": "ts-node src/cli/backfill.ts",
     "test:oracle": "ts-node src/tests/verify_oracle_production.ts",
     "test:metadata": "ts-node src/tests/verify_metadata_discovery.ts"

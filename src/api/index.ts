@@ -1,7 +1,22 @@
 import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { createServer } from 'http';
+import { execute, subscribe } from 'graphql';
 import { ApolloServer, gql } from 'apollo-server-express';
-import { config } from '../config';
+import { SubscriptionServer } from 'subscriptions-transport-ws';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { config, solanaConnection } from '../config';
 import { db } from '../db/client';
+import { pubsub } from '../worker/pubsub';
+import { WebhookReceiver } from './receiver';
+import { rateLimiter } from './rate_limiter';
+import { WebhookManager } from '../worker/webhook_manager';
+import { PriceOracle } from '../worker/parser';
+import { IndexManager } from '../worker/index_manager';
+
+// Debug PubSub Initialization
+console.log('[Sovereign] PubSub Engine Status:', typeof (pubsub as any).asyncIterableIterator === 'function' ? 'READY' : 'FAULT');
 
 const typeDefs = gql`
     type Token {
@@ -9,6 +24,8 @@ const typeDefs = gql`
         symbol: String
         name: String
         decimals: Int
+        rank: Int
+        isTop100: Boolean
     }
 
     type Ohlcv {
@@ -20,8 +37,17 @@ const typeDefs = gql`
         volume: Float
     }
 
+    type PriceDrift {
+        raydium: Float
+        orca: Float
+        meteora: Float
+        slot: Int
+        timestamp: String
+    }
+
     type Subscription {
         priceUpdated(tokenAddress: String!): Ohlcv
+        priceDrift: PriceDrift
         newSwap: Swap
     }
 
@@ -46,12 +72,16 @@ const typeDefs = gql`
         total_volume: Float
         trade_count: Int
     }
-
     type Query {
         getHistory(tokenAddress: String!, interval: String!): [Ohlcv]
         searchTokens(query: String!): [Token]
+        getTop100Tokens: [Token]
         getTopMovers: [TopMover]
         getVolumeClusters: [VolumeCluster]
+    }
+
+    type Mutation {
+        triggerIndexing(tokenAddress: String!): Boolean
     }
 `;
 
@@ -74,7 +104,19 @@ const resolvers = {
                 return [];
             }
         },
-        getTopMovers: async () => {
+        getTop100Tokens: async () => {
+            try {
+                const tokens: any = await db.getTop100Tokens();
+                return tokens.map((t: any) => ({ ...t, isTop100: true }));
+            } catch (err) {
+                console.error('Error fetching top 100 tokens:', err);
+                return [];
+            }
+        },
+        getTopMovers: async (_: any, __: any, context: any) => {
+            if (context.tier === 'FREE') {
+                throw new Error('PRO_REQUIRED: getTopMovers requires a SHINOBI (PRO) tier or higher.');
+            }
             try {
                 return await db.getTopMovers();
             } catch (err) {
@@ -82,7 +124,10 @@ const resolvers = {
                 return [];
             }
         },
-        getVolumeClusters: async () => {
+        getVolumeClusters: async (_: any, __: any, context: any) => {
+            if (context.tier === 'FREE') {
+                throw new Error('PRO_REQUIRED: getVolumeClusters requires a SHINOBI (PRO) tier or higher.');
+            }
             try {
                 return await db.getVolumeClusters();
             } catch (err) {
@@ -91,37 +136,84 @@ const resolvers = {
             }
         }
     },
+    Mutation: {
+        triggerIndexing: async (_: any, { tokenAddress }: { tokenAddress: string }, context: any) => {
+            if (context.tier === 'FREE') {
+                throw new Error('PRO_REQUIRED: triggerIndexing requires a SHINOBI (PRO) tier or higher.');
+            }
+            if (config.isReadOnly) {
+                throw new Error('Sovereignty Guard: Engine is in READ_ONLY mode. Write operations are forbidden.');
+            }
+            try {
+                console.log(`[Mutation] Triggering indexing for: ${tokenAddress}`);
+                // 1. Initial Metadata Resolve
+                await PriceOracle.resolveTokenMetadata(tokenAddress);
+                
+                return true;
+            } catch (err) {
+                console.error(`[Mutation] Indexing trigger failed for ${tokenAddress}:`, err);
+                return false;
+            }
+        }
+    },
     Subscription: {
         priceUpdated: {
             subscribe: (_: any, { tokenAddress }: { tokenAddress: string }) => {
-                return pubsub.asyncIterator([`PRICE_UPDATED_${tokenAddress}`]);
+                return (pubsub as any).asyncIterableIterator([`PRICE_UPDATED_${tokenAddress}`]);
             }
         },
         newSwap: {
-            subscribe: () => pubsub.asyncIterator(['SWAP_UPDATED'])
+            subscribe: () => (pubsub as any).asyncIterableIterator(['SWAP_UPDATED'])
+        },
+        priceDrift: {
+            subscribe: () => (pubsub as any).asyncIterableIterator(['PRICE_DRIFT_UPDATED'])
         }
     }
 };
 
-import { createServer } from 'http';
-import { execute, subscribe } from 'graphql';
-import { SubscriptionServer } from 'subscriptions-transport-ws';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import { pubsub } from '../worker/processor';
-import { WebhookReceiver } from './receiver';
-import { WebhookManager } from '../worker/webhook_manager';
-import { PriceOracle } from '../worker/parser';
 
-// ... defined typeDefs and resolvers ...
+// Schema and Resolvers are defined above
 
 async function startServer() {
     const app = express();
+    app.use(cors()); // Enable CORS for Sovereign access
+    
+    // Serve Dashboard directly from the Gateway
+    app.use('/dashboard', express.static(path.join(__dirname, '../dashboard')));
+    
     const httpServer = createServer(app);
     
     const schema = makeExecutableSchema({ typeDefs, resolvers });
+    
+    interface AuthContext {
+        tier: 'FREE' | 'PRO' | 'PREMIUM' | 'INSTITUTIONAL';
+        rateLimitRpm: number;
+    }
 
     const server = new ApolloServer({ 
         schema,
+        introspection: true, 
+        context: async ({ req }): Promise<AuthContext> => {
+            const apiKey = (req.headers['x-aether-key'] as string) || 'anonymous';
+            
+            let tier: any = 'FREE';
+            let limitRpm = 10; // Aggressive anonymous limit
+
+            if (apiKey !== 'anonymous') {
+                const subscription = await db.validateApiKey(apiKey);
+                if (subscription) {
+                    tier = subscription.tier;
+                    limitRpm = subscription.rateLimitRpm;
+                }
+            }
+            
+            // Enforce Rate Limit
+            if (!rateLimiter.isAllowed(apiKey, limitRpm)) {
+                throw new Error(`RATE_LIMIT_EXCEEDED: Maximum of ${limitRpm} RPM for your tier (${tier}). Upgrade for higher limits.`);
+            }
+
+            return { tier, rateLimitRpm: limitRpm };
+        },
         plugins: [{
             async serverWillStart() {
                 return {
@@ -134,23 +226,69 @@ async function startServer() {
     });
 
     const subscriptionServer = SubscriptionServer.create(
-        { schema, execute, subscribe },
+        { 
+            schema, 
+            execute, 
+            subscribe,
+            onConnect: () => console.log('📡 Dashboard Linked (Sovereign Connection)')
+        },
         { server: httpServer, path: server.graphqlPath }
     );
 
     await server.start();
-    server.applyMiddleware({ app });
+    server.applyMiddleware({ app: app as any });
 
-    // Initialize Sovereign Components
-    WebhookReceiver.setup(app);
-    await WebhookManager.orchestrate();
-    await PriceOracle.refreshSolPrice();
+    // --- STATIC ROUTES (Sovereign Flash Aesthetic) ---
+    // Serve Landing Page & Dev Portal
+    const staticPath = path.join(__dirname, 'static');
+    app.use(express.static(staticPath));
+    
+    // Root serves Landing Page
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(staticPath, 'index.html'));
+    });
 
+    // /dev serves Developer Portal
+    app.get('/dev', (req, res) => {
+        res.sendFile(path.join(staticPath, 'dev.html'));
+    });
+
+    // Legacy Dashboard support
+    app.use('/dashboard', express.static(path.join(__dirname, '../dashboard')));
+    
     const PORT = process.env.PORT || 4000;
-    httpServer.listen(PORT, () => {
+    httpServer.listen(PORT, async () => {
         console.log(`🚀 Gateway ready at http://localhost:${PORT}${server.graphqlPath}`);
         console.log(`📡 Subscriptions ready at ws://localhost:${PORT}${server.graphqlPath}`);
+
+        // Initialize Sovereign Components asynchronously after startup
+        try {
+            WebhookReceiver.setup(app as any);
+            await WebhookManager.orchestrate();
+            // Market Guard Ignition
+            await IndexManager.orchestrate();
+        } catch (err) {
+            console.warn('⚠️ Sovereign background orchestration bypassed or failed:', err);
+        }
     });
+
+    // Start High-Fidelity Price Broadcasting
+    setInterval(async () => {
+        try {
+            await PriceOracle.refreshSolPrice();
+            const drift = PriceOracle.getDrift();
+            if (drift.raydium > 0) {
+                const currentSlot = await solanaConnection.getSlot();
+                await pubsub.publish('PRICE_DRIFT_UPDATED', { priceDrift: {
+                    ...drift,
+                    slot: currentSlot,
+                    timestamp: drift.timestamp.toISOString()
+                }});
+            }
+        } catch (err) {
+            console.error('[Interval] Price drift broadcast failed:', err);
+        }
+    }, 500); // 500ms High-Fidelity Pulse
 }
 
 startServer().catch(err => {

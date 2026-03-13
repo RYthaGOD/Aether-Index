@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AetherIndex | Arbitrage Command Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glass-overlay"></div>
+    
+    <header>
+        <div class="logo">
+            <span class="pulse"></span>
+            AETHER<span>INDEX</span>
+        </div>
+        <div class="status-bar">
+            <div class="status-item">
+                <span class="label">Sovereign Link:</span>
+                <span id="connection-status" class="value connecting">Connecting...</span>
+            </div>
+            <div class="status-item">
+                <span class="label">Last Slot:</span>
+                <span id="last-slot" class="value">---</span>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="radar-container">
+            <div class="radar">
+                <div class="central-node">
+                    <div class="sol-glow"></div>
+                    <img src="https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png" alt="SOL" class="sol-icon">
+                    <span class="node-label">SOL/USDC</span>
+                </div>
+
+                <div id="raydium-node" class="dex-node satellite" style="--angle: 0deg;">
+                    <div class="node-bg"></div>
+                    <span class="dex-name">RAYDIUM</span>
+                    <span id="price-raydium" class="dex-price">$0.00</span>
+                </div>
+
+                <div id="orca-node" class="dex-node satellite" style="--angle: 120deg;">
+                    <div class="node-bg"></div>
+                    <span class="dex-name">ORCA</span>
+                    <span id="price-orca" class="dex-price">$0.00</span>
+                </div>
+
+                <div id="meteora-node" class="dex-node satellite" style="--angle: 240deg;">
+                    <div class="node-bg"></div>
+                    <span class="dex-name">METEORA</span>
+                    <span id="price-meteora" class="dex-price">$0.00</span>
+                </div>
+
+                <svg class="connections">
+                    <line id="line-ray-orca" class="drift-line" x1="0" y1="0" x2="0" y2="0" />
+                    <line id="line-orca-met" class="drift-line" x1="0" y2="0" x2="0" y2="0" />
+                    <line id="line-met-ray" class="drift-line" x1="0" y2="0" x2="0" y2="0" />
+                </svg>
+
+                <div id="arbitrage-alert" class="alert-box">
+                    <span class="alert-icon">⚡</span>
+                    <span class="alert-text">SCANNING FOR ARBITRAGE...</span>
+                </div>
+            </div>
+        </div>
+
+        <aside class="alpha-feed">
+            <h3>ALPHA STREAM</h3>
+            <div id="log-container" class="log-stream">
+                <div class="log-item initial">AetherIndex Sovereign Ingestion Started...</div>
+            </div>
+        </aside>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
