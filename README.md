@@ -48,19 +48,25 @@ cd Aether-Index
 
 # Configure environment
 cp .env.example .env
-# Set HELIUS_API_KEY, HELIUS_WEBHOOK_URL, and RPC endpoints
+### 3. Install Globally (Optional)
+```bash
+npm install -g .
+# Or for development
+npm link
 ```
 
-### 3. Start the Engine
+### 4. Start the Engine
 ```bash
-npm run dev
-# Or via Docker
-docker-compose up -d
+# Setup your sovereign environment
+aetherindex init
+
+# Ignition
+aetherindex up
 ```
 
-### 4. Backfill Historical Data
+### 5. Backfill Historical Data
 ```bash
-npm run backfill <start_slot> <end_slot>
+aetherindex backfill <start_slot> <end_slot>
 ```
 
 ---
