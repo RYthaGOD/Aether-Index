@@ -105,10 +105,16 @@ export class SocketGuardian {
             ];
 
             for (const program of programs) {
-                const sigs = await this.fetchWithRetry(() => solanaConnection.getSignaturesForAddress(program, { limit: 50 }));
+                // Dynamic Limit calculation: 2x gap size to oversample and ensure coverage
+                // Minimum 50, Maximum 1000 (Institutional Safety Guard)
+                const dynamicLimit = Math.min(Math.max((endSlot - startSlot) * 2, 50), 1000);
+                
+                console.log(`[Guardian] Dynamic patch depth for ${program.toBase58().slice(0, 8)}...: ${dynamicLimit}`);
+                const sigs = await this.fetchWithRetry(() => solanaConnection.getSignaturesForAddress(program, { limit: dynamicLimit }));
+                
                 for (const s of sigs) {
                     if (s.slot >= startSlot && s.slot <= endSlot && !this.seenSignatures.has(s.signature)) {
-                        console.log(`[Guardian] PATCHING MISSED TX: ${s.signature}`);
+                        console.log(`[Guardian] PATCHING MISSED TX: ${s.signature} (Slot: ${s.slot})`);
                         this.seenSignatures.add(s.signature);
                         setTimeout(() => this.seenSignatures.delete(s.signature), this.signatureCacheTTL);
                         await this.processSignature(s.signature);
