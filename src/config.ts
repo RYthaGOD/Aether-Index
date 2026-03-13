@@ -7,6 +7,17 @@ export const config = {
     solana: {
         rpcUrl: process.env.SOLANA_RPC_URL || process.env.RPC_URL || 'https://api.mainnet-beta.solana.com',
         wsUrl: process.env.SOLANA_WS_URL || process.env.WSS_URL || 'wss://api.mainnet-beta.solana.com',
+        // Secondary sources for Synthetic gRPC redundancy
+        secondarySources: [
+            { 
+                rpc: process.env.RPC_SOURCE_2 || '', 
+                ws: process.env.WS_SOURCE_2 || '' 
+            },
+            { 
+                rpc: process.env.RPC_SOURCE_3 || '', 
+                ws: process.env.WS_SOURCE_3 || '' 
+            }
+        ].filter(s => s.rpc !== '')
     },
     helius: {
         apiKey: process.env.HELIUS_API_KEY || '',
