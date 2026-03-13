@@ -1,3 +1,5 @@
+![AetherIndex Teaser](assets/teaser.png)
+
 # 🌌 AetherIndex: The Sovereign Solana Indexer
 
 > **Sub-second precision. Zero cloud tax. Total data sovereignty.**

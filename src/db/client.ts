@@ -18,12 +18,16 @@ class DBClient {
 
         this.sqlite = new sqlite3.Database(config.sqlite.filename);
         this.duckdb = new Database(config.duckdb.filename);
+        
+        // Performance & Durability: Enable Write-Ahead Logging
+        this.sqlite.run('PRAGMA journal_mode=WAL');
+        this.duckdb.run('SET journal_mode=WAL'); 
     }
 
     async init() {
         return new Promise<void>((resolve, reject) => {
             const schema = fs.readFileSync(path.join(__dirname, 'sqlite_schema.sql'), 'utf-8');
-            this.sqlite.exec(schema, (err) => {
+            this.sqlite.exec(schema, (err: Error | null) => {
                 if (err) reject(err);
                 else {
                     console.log('SQLite Initialized.');
@@ -42,22 +46,56 @@ class DBClient {
             this.sqlite.run(query, [
                 swap.signature, swap.slot, swap.blockTime.toISOString(), swap.tokenIn, swap.tokenOut,
                 swap.amountIn, swap.amountOut, swap.priceUsd, swap.maker, swap.dex
-            ], (err: any) => {
+            ], (err: Error | null) => {
                 if (err) reject(err);
                 else resolve();
             });
         });
     }
 
+    async upsertToken(token: { mint: string, symbol: string, name: string, decimals: number }) {
+        // Upsert in both SQLite (metadata) and DuckDB (for joins if needed)
+        return new Promise<void>((resolve, reject) => {
+            this.sqlite.run(`
+                INSERT INTO tokens (address, symbol, name, decimals)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(address) DO UPDATE SET
+                    symbol = excluded.symbol,
+                    name = excluded.name,
+                    decimals = excluded.decimals
+            `, [token.mint, token.symbol, token.name, token.decimals], (err: Error | null) => {
+                if (err) return reject(err);
+                
+                const con = this.duckdb.connect();
+                con.run(`
+                    INSERT OR REPLACE INTO tokens (mint, symbol, name, decimals)
+                    VALUES ('${token.mint}', '${token.symbol}', '${token.name}', ${token.decimals})
+                `, (err2: Error | null) => {
+                    if (err2) reject(err2);
+                    else resolve();
+                });
+            });
+        });
+    }
+
     async insertToDuckDB(swaps: any[]) {
+        if (swaps.length === 0) return;
         const con = this.duckdb.connect();
-        // Simplified raw insert. In production, we'd use themed/partitioned Parquet files.
-        for (const s of swaps) {
-            con.run(`
-                INSERT INTO raw_swaps VALUES (
-                    ${s.blockTime.getTime()}, '${s.tokenOut}', ${s.priceUsd}, ${s.amountOut * s.priceUsd}, 'buy', '${s.signature}', ${s.slot}
-                )
-            `);
+        
+        // Use a transaction/batch insert for DuckDB
+        con.run('BEGIN TRANSACTION');
+        try {
+            for (const s of swaps) {
+                con.run(`
+                    INSERT INTO raw_swaps VALUES (
+                        ${s.blockTime.getTime()}, '${s.tokenOut}', ${s.priceUsd}, ${s.amountOut * s.priceUsd}, 'buy', '${s.signature}', ${s.slot}, '${s.dex}', '${s.maker}'
+                    )
+                `);
+            }
+            con.run('COMMIT');
+        } catch (err: any) {
+            con.run('ROLLBACK');
+            throw err;
         }
     }
 
@@ -68,7 +106,7 @@ class DBClient {
                 VALUES ('default', ?)
                 ON CONFLICT (key) DO UPDATE SET last_processed_slot = excluded.last_processed_slot
             `;
-            this.sqlite.run(query, [slot], (err) => {
+            this.sqlite.run(query, [slot], (err: Error | null) => {
                 if (err) reject(err);
                 else resolve();
             });
@@ -93,7 +131,22 @@ class DBClient {
             LIMIT 1000
         `;
         return new Promise((resolve, reject) => {
-            con.all(sql, (err, res) => {
+            con.all(sql, (err: Error | null, res: any) => {
+                if (err) reject(err);
+                else resolve(res);
+            });
+        });
+    }
+    async searchTokens(query: string) {
+        return new Promise((resolve, reject) => {
+            const sql = `
+                SELECT address as mint, symbol, name, decimals 
+                FROM tokens 
+                WHERE symbol LIKE ? OR name LIKE ? OR address = ?
+                LIMIT 20
+            `;
+            const param = `%${query}%`;
+            this.sqlite.all(sql, [param, param, query], (err: Error | null, res: any) => {
                 if (err) reject(err);
                 else resolve(res);
             });

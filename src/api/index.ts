@@ -1,11 +1,18 @@
 import express from 'express';
 import { ApolloServer, gql } from 'apollo-server-express';
-import { config } from './config';
-import { db } from './db/client';
+import { config } from '../config';
+import { db } from '../db/client';
 
 const typeDefs = gql`
+    type Token {
+        mint: String
+        symbol: String
+        name: String
+        decimals: Int
+    }
+
     type Ohlcv {
-        timestamp: String
+        window_start: String
         open: Float
         high: Float
         low: Float
@@ -15,6 +22,7 @@ const typeDefs = gql`
 
     type Query {
         getHistory(tokenAddress: String!, interval: String!): [Ohlcv]
+        searchTokens(query: String!): [Token]
     }
 `;
 
@@ -22,11 +30,18 @@ const resolvers = {
     Query: {
         getHistory: async (_: any, { tokenAddress, interval }: { tokenAddress: string, interval: string }) => {
             try {
-                // Interval mapping (e.g., '1m', '15m', '1h')
                 const history = await db.getHistory(tokenAddress, interval);
                 return history;
             } catch (err) {
                 console.error('Error fetching history:', err);
+                return [];
+            }
+        },
+        searchTokens: async (_: any, { query }: { query: string }) => {
+            try {
+                return await db.searchTokens(query);
+            } catch (err) {
+                console.error('Error searching tokens:', err);
                 return [];
             }
         }
