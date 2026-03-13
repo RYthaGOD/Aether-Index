@@ -30,10 +30,10 @@ CREATE TABLE IF NOT EXISTS sync_state (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_swaps_slot ON swaps(slot);
-CREATE INDEX idx_swaps_token_in ON swaps(token_in_address);
-CREATE INDEX idx_swaps_token_out ON swaps(token_out_address);
-CREATE INDEX idx_swaps_block_time ON swaps(block_time);
+CREATE INDEX IF NOT EXISTS idx_swaps_slot ON swaps(slot);
+CREATE INDEX IF NOT EXISTS idx_swaps_token_in ON swaps(token_in_address);
+CREATE INDEX IF NOT EXISTS idx_swaps_token_out ON swaps(token_out_address);
+CREATE INDEX IF NOT EXISTS idx_swaps_block_time ON swaps(block_time);
 
 CREATE TABLE IF NOT EXISTS creators (
     address TEXT PRIMARY KEY,
