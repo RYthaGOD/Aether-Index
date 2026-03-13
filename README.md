@@ -1,30 +1,32 @@
 ![AetherIndex Teaser](assets/teaser.png)
 
-# 🌌 AetherIndex: The Sovereign Solana Indexer
+# 🌌 AetherIndex: The Universal Solana Data Engine
 
-> **Sub-second precision. Zero cloud tax. Total data sovereignty.**
+> **Every Swap. Every Token. Every Price. All Sovereign.**
 
-AetherIndex is a high-performance, developer-first charting backend for Solana. It allows you to run a professional-grade OHLCV indexing service for **$0/month** by leveraging a specialized "Sovereign" architecture.
+AetherIndex is a high-performance, developer-first indexing engine for the entire Solana ecosystem. It transforms raw gRPC streams into a structured, analytical-grade data lake (DuckDB & Parquet) on your local disk, enabling sub-second OHLCV query performance without the cloud tax.
 
 ---
 
 ## ⚡ Why AetherIndex?
 
-Modern Solana indexers often require expensive managed database clusters (ClickHouse/PostgreSQL) and premium RPC tiers. **AetherIndex breaks this mold.**
+Traditional Solana indexers are often limited to specific pools or require massive centralized database clusters. **AetherIndex is different.**
 
-- **$0 Infrastructure Cost**: Uses **DuckDB** and **SQLite** for analytical-grade performance on local disk. No managed DB required.
-- **Sub-Second Precision**: Ingests trades directly via **Helius LaserStream gRPC** (Devnet) or Webhooks (Mainnet).
-- **Absolute Truth**: Cross-references DEX log events against on-chain token balance changes for 100% pricing accuracy.
-- **One-Command Setup**: Dockerized and ready to deploy in seconds.
+- **Global Coverage**: Subscribes to and parses activity across all major DEXs (Raydium, Jupiter, Orca, Phoenix).
+- **Dynamic Price Oracle**: Trustless, on-chain price triangulation. Resolves USD value for *any* token by automatically discovering SOL and USDC base rates.
+- **Sovereign Analytics**: Powered by **DuckDB** (analytical engine) and **SQLite** (registry). Query millions of rows with vectorized SQL in under 100ms.
+- **Token Discovery**: Automatically discovers new token launches and queues them for metadata enrichment.
+- **Zero-Trust Durability**: Implements Write-Ahead Logging (WAL) and memory-buffered batching for data integrity under extreme chain volume.
 
 ---
 
 ## 🏗️ The "Sovereign" Architecture
 
-AetherIndex uses a dual-layered local storage strategy:
+AetherIndex leverages an elite local-first strategy:
 
-1.  **DuckDB (The Speed)**: An embedded analytical engine (vectorized SQL) that processes millions of trades into 1s, 1m, and 1h OHLCV candles with sub-100ms query times.
-2.  **SQLite (The Truth)**: A local, ACID-compliant ledger that tracks every swap and handles chain re-orgs (reconciliation) automatically.
+1.  **Yellowstone gRPC (The Ingestion)**: High-speed, low-latency transaction ingestion directly from Geyser nodes.
+2.  **DuckDB (The Analytical Engine)**: An embedded vectorized SQL database that acts as your local "ClickHouse." It converts trillions of raw ticks into efficient Parquet-backed OHLCV candles.
+3.  **SQLite (The Registry & Meta-Layer)**: A robust, ACID-compliant layer for the Global Token Registry and system sync state.
 
 ---
 
@@ -32,27 +34,37 @@ AetherIndex uses a dual-layered local storage strategy:
 
 ### 1. Requirements
 - Docker & Docker Compose
-- Helius API Key (Free Tier)
+- Helius API Key (Yellowstone gRPC enabled)
 
 ### 2. Launch
 ```bash
 # Clone and enter
-git clone https://github.com/your-repo/aether-index.git
-cd aether-index
+git clone https://github.com/RYthaGOD/Aether-Index.git
+cd Aether-Index
 
-# Set your keys
-echo "HELIUS_API_KEY=your_key_here" > .env
+# Configure environment
+cp .env.example .env
+# Edit .env with your Helius Key and RPC URLs
 
 # Fire it up
 docker-compose up -d
 ```
 
-### 3. Query
+### 3. Query the Universe
 Your GraphQL Gateway is live at `http://localhost:4000/graphql`.
 
 ```graphql
 query {
+  # Search for any token discovered by the indexer
+  searchTokens(query: "SOL") {
+    mint
+    symbol
+    name
+  }
+
+  # Fetch high-fidelity OHLCV candles
   getHistory(tokenAddress: "...", interval: "1m") {
+    window_start
     open
     high
     low
@@ -64,24 +76,27 @@ query {
 
 ---
 
-## 💰 Monetization Use Cases
+## 🗺️ Suggested Next Steps (Roadmap)
 
-AetherIndex isn't just a tool; it's a business-in-a-box:
-- **Whitelabel Charting**: Sell embeddable charts to new Solana projects.
-- **Alpha Feeds**: Provide sub-second "Hot Swap" alerts to trading groups.
-- **Data-as-a-Service**: Export compressed Parquet files for backtesting labs.
+To take AetherIndex to Mainnet dominance, consider these architectural expansions:
+
+1.  **Metaplex Metadata Integration**: Fully implement the `fetchMetaplexMetadata` worker to resolve symbols, names, and images for new launches automatically.
+2.  **CLMM & DLMM Support**: Extend the `SwapParser` to handle concentrated liquidity pools (Raydium CLMM, Orca Whirlpools, Meteora) for 100% liquidity coverage.
+3.  **Advanced Analytical Views**: Add DuckDB views for "Top Movers," "Volume Clusters," and "Smart Money Tracking" using the indexed `maker` data.
+4.  **Websocket Price Feeds**: Implement a real-time Sub/Pub layer in the API to push live candle updates to frontends as they close.
 
 ---
 
-## 🛠️ Built With 2026 Tech
-- **Core**: TypeScript, Node.js
-- **Ingestion**: Yellowstone gRPC, Helius LaserStream
-- **Storage**: DuckDB (Parquet), SQLite3
-- **API**: GraphQL (Apollo Server)
+## 🛠️ Tech Stack
+- **Languages**: TypeScript, SQL (Vectorized)
+- **Data Ingestion**: Yellowstone gRPC (@triton-one)
+- **Analytical Storage**: DuckDB
+- **Metadata Storage**: SQLite3
+- **API Connectivity**: GraphQL (Apollo Server)
 
 ---
 
 ## 🤝 Contributing
-Join the elite. Help us refine the 1s reconciliation engine or add new DEX parsers (Raydium CLMM, Phoenix).
+Join the elite. Help us refine the 1s reconciliation engine or add new DEX parsers.
 
-**LFG.** 🚀
+**Rykiri**: "The net is cast. AetherIndex now sees everything on the chain. Let's stack that data. ⚡🌩️🚀"
