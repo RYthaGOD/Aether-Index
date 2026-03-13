@@ -153,4 +153,15 @@ async function startServer() {
     });
 }
 
-startServer().catch(console.error);
+startServer().catch(err => {
+    console.error('❌ Critical Server Startup Error:', err);
+    process.exit(1);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('💥 Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+});

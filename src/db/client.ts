@@ -1,10 +1,9 @@
 import sqlite3 from 'sqlite3';
 import { Database } from 'duckdb';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { SwapEvent } from '../worker/parser';
 import { config } from '../config';
 import fs from 'fs';
 import path from 'path';
+import { SwapEvent } from '../worker/parser';
 
 class DBClient {
     private sqlite: sqlite3.Database;
@@ -20,14 +19,17 @@ class DBClient {
         this.sqlite = new sqlite3.Database(config.sqlite.filename);
         this.duckdb = new Database(config.duckdb.filename);
         
-        // Performance & Durability: Enable Write-Ahead Logging
+        // Performance & Durability: Enable Write-Ahead Logging for SQLite
         this.sqlite.run('PRAGMA journal_mode=WAL');
-        this.duckdb.run('SET journal_mode=WAL'); 
     }
 
     async init() {
         return new Promise<void>((resolve, reject) => {
-            const schema = fs.readFileSync(path.join(__dirname, 'sqlite_schema.sql'), 'utf-8');
+            const schemaPath = path.join(__dirname, 'sqlite_schema.sql');
+            if (!fs.existsSync(schemaPath)) {
+                return resolve(); // Skip if schema not found during distribution
+            }
+            const schema = fs.readFileSync(schemaPath, 'utf-8');
             this.sqlite.exec(schema, (err: Error | null) => {
                 if (err) reject(err);
                 else {
@@ -55,7 +57,6 @@ class DBClient {
     }
 
     async upsertToken(token: { mint: string, symbol: string, name: string, decimals: number }) {
-        // Upsert in both SQLite (metadata) and DuckDB (for joins if needed)
         return new Promise<void>((resolve, reject) => {
             this.sqlite.run(`
                 INSERT INTO tokens (address, symbol, name, decimals)
@@ -68,7 +69,6 @@ class DBClient {
                 if (err) return reject(err);
                 
                 const con = this.duckdb.connect();
-                // DuckDB uses UPSERT or ON CONFLICT
                 con.run(`
                     INSERT INTO tokens (mint, symbol, name, decimals)
                     VALUES (?, ?, ?, ?)
@@ -91,7 +91,6 @@ class DBClient {
         con.run('BEGIN TRANSACTION');
         try {
             for (const s of swaps) {
-                // Determine side if not provided
                 const side = s.side || (s.tokenIn === 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' || s.tokenIn === 'So11111111111111111111111111111111111111112' ? 'buy' : 'sell');
                 
                 con.run(`
@@ -133,7 +132,6 @@ class DBClient {
 
     async getHistory(tokenAddress: string, interval: string) {
         const con = this.duckdb.connect();
-        // DuckDB vectorized SQL for sub-100ms OHLCV
         const sql = `
             SELECT 
                 time_bucket(INTERVAL '1 ${interval}', timestamp) as window_start,
@@ -155,6 +153,7 @@ class DBClient {
             });
         });
     }
+
     async searchTokens(query: string) {
         return new Promise((resolve, reject) => {
             const sql = `
