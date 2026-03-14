@@ -6,6 +6,10 @@ services:
     container_name: aether-index
     restart: unless-stopped
     env_file: .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
     volumes:
       - ./data:/app/data
     ports:
@@ -15,3 +19,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+
+  redis:
+    image: redis:alpine
+    container_name: aether-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"

@@ -1,3 +1,6 @@
+# PRO Features (Local-only, not for public repo)
+pro/
+
 # Dependency directories
 node_modules/
 jspm_packages/

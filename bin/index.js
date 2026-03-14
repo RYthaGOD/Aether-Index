@@ -94,14 +94,29 @@ program.command('backfill')
     execSync(`npx ts-node src/cli/backfill.ts ${start} ${end}`, { stdio: 'inherit' });
   });
 
-program.command('alpha')
-  .description('Audit a token creator')
-  .argument('<creator>', 'Creator Address')
-  .argument('<mint>', 'Token Mint')
-  .action((creator, mint) => {
-    console.log(chalk.magenta(`🔍 Tracing creator ${creator} for mint ${mint}...`));
-    // Implementation for direct alpha trace if needed
-    console.log(chalk.gray('Audit results will appear in the system logs.'));
+program.command('keys')
+  .description('Manage AetherIndex API keys (Subscriptions)')
+  .option('-a, --add', 'Add a new key')
+  .option('-l, --list', 'List all keys')
+  .action(async (options) => {
+    // Dynamically import db to avoid requiring build during setup
+    const { db } = require('../dist/db/client');
+    await db.initSqliteOnly();
+
+    if (options.add) {
+      const { key, tier, limit } = await inquirer.prompt([
+        { type: 'input', name: 'key', message: 'Enter new API Key (or leave blank for random):', default: () => Math.random().toString(36).substring(2, 15) },
+        { type: 'list', name: 'tier', message: 'Select Tier:', choices: ['FREE', 'PRO', 'INSTITUTIONAL'] },
+        { type: 'number', name: 'limit', message: 'RPM Limit:', default: (answers) => answers.tier === 'PRO' ? 100 : answers.tier === 'INSTITUTIONAL' ? 1000 : 10 }
+      ]);
+
+      await db.createSubscription(key, tier, limit);
+      console.log(chalk.green(`\n✅ Subscription Created: ${key} [${tier}] (${limit} RPM)`));
+    } else {
+      // Logic for listing if required, but adding is the priority for launch
+      console.log(chalk.gray('Use --add to create a new subscription key.'));
+    }
+    process.exit(0);
   });
 
 program.parse();
