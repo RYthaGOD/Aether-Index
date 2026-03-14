@@ -16,7 +16,7 @@
 
 ## Hardened Execution: The Sovereign Standard
 
-AetherIndex has been audited and hardened for production deployment. **Internal VC Audit Grade: A+**
+AetherIndex has been audited and hardened for production deployment. **Institutional Hardening Grade: A+**
 
 ### Hardened Security
 Protect your data pipeline with institutional-grade protocols.
