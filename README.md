@@ -1,34 +1,40 @@
-![AetherIndex Teaser](assets/teaser.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/RYthaGOD/Aether-Index/main/assets/logo.png" width="150" style="border-radius: 20px" alt="AetherIndex Logo">
+</p>
 
-# 🌌 AetherIndex: Institutional-Grade Solana Indexing
+<p align="center">
+  <a href="https://github.com/RYthaGOD/Aether-Index/actions"><img src="https://img.shields.io/github/actions/workflow/status/RYthaGOD/Aether-Index/main.yml?style=for-the-badge&logo=github" alt="GitHub Actions"></a>
+  <a href="https://www.npmjs.com/package/solana-charts"><img src="https://img.shields.io/npm/v/solana-charts?style=for-the-badge&logo=npm" alt="NPM Version"></a>
+  <img src="https://img.shields.io/badge/license-MIT-yellow?style=for-the-badge" alt="License">
+</p>
 
-> **"The mission is paramount. I've forged the architecture for absolute speed and security; you focus on the vision."** — Rykiri
+<h1 align="center">AetherIndex</h1>
 
-AetherIndex is a hardened, high-fidelity indexing engine for the Solana blockchain. Built for institutional-grade reliability, AetherIndex bypasses centralized APIs to deliver raw, on-chain truth with sub-millisecond precision.
+<p align="center">Institutional-grade, sovereign Solana indexing engine built for absolute speed and raw on-chain truth.</p>
 
 ---
 
-## ⚡ Hardened Execution: The Sovereign Standard
+## Hardened Execution: The Sovereign Standard
 
 AetherIndex has been audited and hardened for production deployment. **Internal VC Audit Grade: A+**
 
-### 🛡️ Hardened Security
+### Hardened Security
 Protect your data pipeline with institutional-grade protocols.
 - **HMAC Webhook Verification**: Built-in SHA256 signature verification for Helius streams prevents data injection and forged transactions.
 - **Persistent Tier-Based Access**: Rate limiting is backed by **Redis**, ensuring that **FREE**, **PRO**, and **INSTITUTIONAL** tiers are strictly enforced across server restarts and distributed instances.
 
-### 🚀 Performance at Scale
+### Performance at Scale
 Reconstruct the past and monitor the present at lightning speed.
 - **Parallel Sync Engine**: Our backfill CLI implements parallelized block fetching (5x batching), enabling rapid historical state reconstruction.
 - **Dynamic Socket Guardian**: A background "Guardian" detects slot gaps in real-time and patches them using **Dynamic Depth Calculation** (oversampling based on gap size) to ensure 100% data integrity even during high-volatility events.
 - **RPC Redundancy**: Multi-source log subscription provides parallel redundancy, switching to secondary RPCs if primary sources experience lag or gaps.
 
-### 📊 Vectorized SQL Analytics
+### Vectorized SQL Analytics
 Powered by **DuckDB** and **SQLite**, AetherIndex provides local, sub-50ms analytics for OHLCV, volume clusters, and top movers. Transform raw logs into institutional intelligence in memory.
 
 ---
 
-## 🏗️ Technical Architecture
+## Technical Architecture
 
 ```mermaid
 graph TD
@@ -44,7 +50,7 @@ graph TD
 
 ---
 
-## 🚀 Ignition
+## Ignition
 
 Launch the hardened engine in seconds.
 
@@ -61,7 +67,7 @@ npm start
 
 ---
 
-## 🧪 Scientific Proof (Production Hardening)
+## Scientific Proof (Production Hardening)
 
 We prove readiness through code. Run our "Proof of Power" suite:
 
@@ -75,7 +81,7 @@ npx ts-node src/tests/verify_hardening.ts
 
 ---
 
-## 🧪 Access Tier Verification
+## Access Tier Verification
 
 Verify your monetization and rate-limiting logic:
 
@@ -88,12 +94,12 @@ npx ts-node src/tests/verify_access_tiers.ts
 
 ---
 
-## 🤝 The Sovereign Standard
+## The Sovereign Standard
 
 AetherIndex is more than a tool; it's the foundation. We maintain the core engine to empower every developer on Solana.
 
-- 🌐 [Landing Page](http://localhost:4000/) — The Vision.
-- 📡 [GraphQL API](http://localhost:4000/graphql) — The Data.
-- 💎 [Live Feed Dashboard](http://localhost:4000/dashboard) — The Evidence.
+- 🌐 [Landing Page](http://localhost:4000/) — The Vision
+- 📡 [GraphQL API](http://localhost:4000/graphql) — The Data
+- 💎 [Live Feed Dashboard](http://localhost:4000/dashboard) — The Evidence
 
-**Rykiri**: "The shadows have been cleared. AetherIndex is now hardened, optimized, and sovereign. Let's dominate the chain. ⚡🌩️🚀"
+> "The shadows have been cleared. AetherIndex is now hardened, optimized, and sovereign. Let's dominate the chain." — **Rykiri**
