@@ -5,7 +5,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=github" alt="Build Status">
   <img src="https://img.shields.io/badge/Grade-A%2B-gold?style=for-the-badge" alt="Audit Grade">
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/License-Apache%202.0-blue?style=for-the-badge&logo=apache" alt="License">
 </p>
 
 <h1 align="center">AetherIndex</h1>
