@@ -4,177 +4,166 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AetherIndex | Developer Portal</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --black: #000000;
-            --yellow: #FFD700;
+            --bg: #ffffff;
+            --text: #0a0a0a;
+            --accent: #FFD700;
+            --gray: #f9f9f9;
+            --border: #eeeeee;
+            --code-bg: #111111;
         }
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-family: 'Inter', sans-serif;
         }
         body {
-            background-color: var(--black);
-            color: var(--yellow);
-            padding: 2rem;
-            min-height: 100vh;
+            background-color: var(--bg);
+            color: var(--text);
+            padding: 4rem 5%;
         }
         header {
-            border-bottom: 2px solid var(--yellow);
-            padding-bottom: 1rem;
-            margin-bottom: 2rem;
+            max-width: 1000px;
+            margin: 0 auto 4rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         h1 {
+            font-weight: 800;
             font-size: 1.5rem;
+            letter-spacing: -0.5px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .section {
+            margin-bottom: 4rem;
+        }
+        h2 {
+            font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 2px;
+            color: #888;
+            margin-bottom: 1.5rem;
         }
-        .back-link {
-            color: var(--yellow);
-            text-decoration: none;
-            font-size: 0.8rem;
-            border: 1px solid var(--yellow);
-            padding: 0.3rem 0.8rem;
-        }
-        .back-link:hover {
-            background: var(--yellow);
-            color: var(--black);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-        .card {
-            background: var(--black);
-            border: 1px solid var(--yellow);
+        .endpoint-box {
+            background: var(--gray);
+            border: 1px solid var(--border);
             padding: 1.5rem;
-            position: relative;
-        }
-        .card h2 {
-            font-size: 1rem;
-            margin-bottom: 1rem;
-            text-transform: uppercase;
-            color: var(--black);
-            background: var(--yellow);
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-        }
-        .endpoint {
-            background: #000;
-            padding: 1rem;
-            border: 1px solid var(--yellow);
-            margin-top: 1rem;
+            border-radius: 6px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 1rem;
         }
-        .endpoint code {
-            color: var(--yellow);
+        code {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
         }
         .copy-btn {
-            background: var(--yellow);
-            color: var(--black);
+            background: var(--text);
+            color: var(--bg);
             border: none;
-            padding: 0.3rem 0.6rem;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 0.7rem;
-        }
-        .copy-btn:active {
-            opacity: 0.7;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
         pre {
-            background: var(--black);
-            padding: 1rem;
-            overflow-x: auto;
-            border-left: 3px solid var(--yellow);
-            margin-top: 1rem;
+            background: var(--code-bg);
+            color: #d4d4d4;
+            padding: 2rem;
+            border-radius: 6px;
+            font-family: 'Fira Code', monospace;
             font-size: 0.85rem;
+            overflow-x: auto;
+            line-height: 1.5;
         }
-        .status {
+        .prop { color: #9cdcfe; }
+        .string { color: #ce9178; }
+        .keyword { color: #c586c0; }
+        
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: var(--text);
+            color: var(--bg);
+            padding: 0.75rem 5%;
+            font-size: 0.75rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            font-size: 0.8rem;
-            margin-top: 2rem;
+            gap: 1rem;
         }
         .pulse {
-            width: 10px;
-            height: 10px;
-            background: var(--yellow);
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
             border-radius: 50%;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(0.9); opacity: 1; }
-            70% { transform: scale(1.5); opacity: 0; }
-            100% { transform: scale(0.9); opacity: 0; }
+            display: inline-block;
         }
     </style>
 </head>
 <body>
     <header>
-        <h1>AetherIndex // DEV_PORTAL</h1>
-        <a href="/" class="back-link">EXIT_TO_MAIN</a>
+        <h1>AetherIndex Docs</h1>
+        <a href="/" style="text-decoration: none; color: inherit; font-size: 0.875rem; font-weight: 600;">&larr; Back</a>
     </header>
 
-    <div class="grid">
-        <div class="card">
+    <div class="container">
+        <div class="section">
             <h2>Endpoints</h2>
-            <p>Access the raw AetherIndex feed via GraphQL or WebSocket.</p>
-            
-            <div class="endpoint">
-                <code id="http-endpoint">HTTP: [Deriving...]</code>
-                <button class="copy-btn" onclick="copyEndpoint('http-endpoint')">COPY</button>
+            <div class="endpoint-box">
+                <code id="http-url">HTTP: Deriving...</code>
+                <button class="copy-btn" onclick="copy('http-url')">Copy</button>
             </div>
-            
-            <div class="endpoint">
-                <code id="ws-endpoint">WSS: [Deriving...]</code>
-                <button class="copy-btn" onclick="copyEndpoint('ws-endpoint')">COPY</button>
+            <div class="endpoint-box">
+                <code id="ws-url">WSS: Deriving...</code>
+                <button class="copy-btn" onclick="copy('ws-url')">Copy</button>
             </div>
         </div>
 
-        <div class="card">
-            <h2>Quick Start</h2>
-            <p>Fetch the latest SOL history in 2 seconds.</p>
+        <div class="section">
+            <h2>Integration Example (JavaScript)</h2>
             <pre>
-fetch(window.location.origin + '/graphql', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    query: `{ 
-      getHistory(tokenAddress: "So11111111111111111111111111111111111111112", 
-                 interval: "1m") { 
-        close 
-        volume 
-      } 
-    }`
-  })
-}).then(res => res.json()).then(console.log);
-            </pre>
+<span class="keyword">const</span> <span class="prop">query</span> = <span class="string">`{
+  getHistory(tokenAddress: "...", interval: "1m") {
+    time
+    close
+    volume
+  }
+}`</span>;
+
+<span class="keyword">fetch</span>(<span class="string">'/graphql'</span>, {
+  <span class="prop">method</span>: <span class="string">'POST'</span>,
+  <span class="prop">headers</span>: { <span class="string">'Content-Type'</span>: <span class="string">'application/json'</span> },
+  <span class="prop">body</span>: <span class="keyword">JSON</span>.<span class="prop">stringify</span>({ query })
+}).<span class="prop">then</span>(<span class="prop">res</span> => <span class="prop">res</span>.<span class="prop">json</span>());</pre>
         </div>
     </div>
 
-    <div class="status">
-        <div class="pulse"></div>
-        <span>SOVEREIGN ENGINE: ACTIVE</span>
+    <div class="status-bar">
+        <span class="pulse"></span>
+        <span>AetherIndex Node Status: Active & Operational</span>
     </div>
 
     <script>
-        const origin = window.location.origin;
-        document.getElementById('http-endpoint').textContent = `HTTP: ${origin}/graphql`;
-        document.getElementById('ws-endpoint').textContent = `WSS: ${origin.replace('http', 'ws')}/graphql`;
+        document.getElementById('http-url').textContent = `HTTP: ${window.location.origin}/graphql`;
+        document.getElementById('ws-url').textContent = `WSS: ${window.location.origin.replace('http', 'ws')}/graphql`;
 
-        function copyEndpoint(id) {
-            const text = document.getElementById(id).textContent.replace('HTTP: ', '').replace('WSS: ', '');
+        function copy(id) {
+            const el = document.getElementById(id);
+            const text = el.textContent.split(': ')[1];
             navigator.clipboard.writeText(text);
-            alert('Copied: ' + text);
+            alert('Copied to clipboard');
         }
     </script>
 </body>

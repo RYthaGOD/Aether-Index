@@ -3,132 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AetherIndex | The Sovereign Standard</title>
+    <title>AetherIndex | Sovereign Solana Data</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --black: #000000;
-            --yellow: #FFD700;
+            --bg: #ffffff;
+            --text: #0a0a0a;
+            --accent: #FFD700;
+            --gray: #f4f4f4;
+            --border: #e2e2e2;
         }
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
         }
         body {
-            background-color: var(--black);
-            color: var(--yellow);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 2rem;
-            overflow: hidden;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            overflow-x: hidden;
         }
-        .container {
-            max-width: 800px;
-            animation: fadeIn 1.5s ease-out;
+        .nav {
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -1px;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .hero {
+            padding: 8rem 5% 4rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: left;
         }
         h1 {
-            font-size: 5rem;
-            font-weight: 900;
-            letter-spacing: -2px;
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
+            font-size: clamp(3rem, 8vw, 5rem);
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -3px;
+            margin-bottom: 2rem;
+            color: var(--text);
         }
-        p.subtitle {
-            font-size: 1.25rem;
-            font-weight: 300;
-            letter-spacing: 4px;
+        .highlight {
+            color: var(--accent);
+            -webkit-text-stroke: 1px var(--text);
+        }
+        p.lead {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #666;
+            max-width: 600px;
             margin-bottom: 3rem;
-            color: var(--yellow);
-            opacity: 0.8;
-        }
-        .features {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 4rem;
-            justify-content: center;
-        }
-        .feature {
-            border: 1px solid var(--yellow);
-            padding: 1rem 2rem;
-            font-size: 0.875rem;
-            font-weight: 600;
-            letter-spacing: 1px;
-            text-transform: uppercase;
         }
         .cta-group {
             display: flex;
-            gap: 1.5rem;
-            justify-content: center;
+            gap: 1rem;
         }
         .btn {
-            padding: 1rem 2.5rem;
-            font-size: 1rem;
-            font-weight: 700;
-            text-transform: uppercase;
+            padding: 1.25rem 2.5rem;
+            font-weight: 600;
             text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background-color: var(--text);
+            color: var(--bg);
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+        .btn-secondary:hover {
+            background: var(--gray);
+        }
+        .tiers {
+            padding: 4rem 5%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .tier-card {
+            border: 1px solid var(--border);
+            padding: 3rem;
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+        .tier-card:hover {
+            border-color: var(--text);
+        }
+        .tier-card.pro {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+        }
+        .tier-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
             letter-spacing: 2px;
+            margin-bottom: 1rem;
+            display: block;
         }
-        .btn-fill {
-            background-color: var(--yellow);
-            color: var(--black);
-            border: 2px solid var(--yellow);
+        .tier-price {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 2rem;
+            display: block;
         }
-        .btn-fill:hover {
-            background-color: var(--black);
-            color: var(--yellow);
+        .tier-features {
+            list-style: none;
         }
-        .btn-outline {
-            background-color: transparent;
-            color: var(--yellow);
-            border: 2px solid var(--yellow);
+        .tier-features li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .btn-outline:hover {
-            background-color: var(--yellow);
-            color: var(--black);
+        .tier-features li::before {
+            content: '→';
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .flash-line {
-            width: 100vw;
-            height: 2px;
-            background: var(--yellow);
-            position: absolute;
-            top: 20%;
-            left: -100%;
-            animation: lightning 3s infinite linear;
-            opacity: 0.2;
-        }
-        @keyframes lightning {
-            0% { left: -100%; }
-            100% { left: 100%; }
+        footer {
+            padding: 4rem 5%;
+            border-top: 1px solid var(--border);
+            text-align: center;
+            font-size: 0.875rem;
+            color: #888;
+            margin-top: 4rem;
         }
     </style>
 </head>
 <body>
-    <div class="flash-line"></div>
-    <div class="container">
-        <h1>AetherIndex</h1>
-        <p class="subtitle">The Sovereign Solana Data Engine</p>
-        
-        <div class="features">
-            <div class="feature">Raw On-Chain Data</div>
-            <div class="feature">No Middleman</div>
-            <div class="feature">Institutional Speed</div>
+    <nav class="nav">
+        <a href="/" class="logo">AetherIndex</a>
+        <div class="nav-links">
+            <a href="/dev" class="btn btn-secondary">Docs</a>
         </div>
+    </nav>
 
+    <section class="hero">
+        <h1>Raw Chain Truth. <br>Zero <span class="highlight">Latency</span>.</h1>
+        <p class="lead">Building sovereign Solana applications shouldn't require third-party nodes. Index the chain directly into your SQL backend.</p>
         <div class="cta-group">
-            <a href="/dashboard" class="btn btn-outline">Launch Engine</a>
-            <a href="/dev" class="btn btn-fill">Developer Portal</a>
+            <a href="/dev" class="btn btn-primary">Start Building</a>
+            <a href="/dashboard" class="btn btn-secondary">Live Dashboard</a>
         </div>
-    </div>
+    </section>
+
+    <section class="tiers">
+        <div class="tier-card">
+            <span class="tier-name">Sovereign</span>
+            <span class="tier-price">Free</span>
+            <ul class="tier-features">
+                <li>Core Indexing Engine</li>
+                <li>SQLite & DuckDB Persistence</li>
+                <li>Standard GraphQL Feed</li>
+                <li>10 Requests / Minute</li>
+            </ul>
+        </div>
+        <div class="tier-card pro">
+            <span class="tier-name">Shinobi</span>
+            <span class="tier-price">Pro</span>
+            <ul class="tier-features">
+                <li>Alpha Discovery Engine</li>
+                <li>Volume Clustering Analytics</li>
+                <li>Priority Socket Guardian</li>
+                <li>Institutional Rate Limits</li>
+            </ul>
+        </div>
+    </section>
+
+    <footer>
+        &copy; 2026 AetherIndex. High-fidelity data for sovereign developers.
+    </footer>
 </body>
 </html>
