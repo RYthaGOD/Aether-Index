@@ -15,6 +15,14 @@ import { WebhookManager } from '../worker/webhook_manager';
 import { PriceOracle } from '../worker/parser';
 import { IndexManager } from '../worker/index_manager';
 
+// PRO Features (Isolated)
+let AlphaDiscovery: any;
+try {
+    AlphaDiscovery = require('../../pro/worker/alpha_discovery').AlphaDiscovery;
+} catch (e) {
+    console.log('[Sovereign] PRO features not detected in core environment.');
+}
+
 // Debug PubSub Initialization
 console.log('[Sovereign] PubSub Engine Status:', typeof (pubsub as any).asyncIterableIterator === 'function' ? 'READY' : 'FAULT');
 
@@ -178,8 +186,8 @@ async function startServer() {
     const app = express();
     app.use(cors()); // Enable CORS for Sovereign access
     
-    // Serve Dashboard directly from the Gateway
-    app.use('/dashboard', express.static(path.join(__dirname, '../dashboard')));
+    // Serve PRO Dashboard directly from the isolated local-only directory
+    app.use('/dashboard', express.static(path.join(__dirname, '../../pro/dashboard')));
     
     const httpServer = createServer(app);
     
@@ -253,8 +261,8 @@ async function startServer() {
         res.sendFile(path.join(staticPath, 'dev.html'));
     });
 
-    // Legacy Dashboard support
-    app.use('/dashboard', express.static(path.join(__dirname, '../dashboard')));
+    // PRO Dashboard Route (Isolated from public repo)
+    app.use('/dashboard', express.static(path.join(__dirname, '../../pro/dashboard')));
     
     const PORT = process.env.PORT || 4000;
     httpServer.listen(PORT, async () => {
@@ -267,6 +275,12 @@ async function startServer() {
             await WebhookManager.orchestrate();
             // Market Guard Ignition
             await IndexManager.orchestrate();
+
+            // PRO Alpha Engine Ignition
+            if (AlphaDiscovery) {
+                console.log('[Sovereign] Igniting PRO Alpha Discovery Engine...');
+                await AlphaDiscovery.orchestrate();
+            }
         } catch (err) {
             console.warn('⚠️ Sovereign background orchestration bypassed or failed:', err);
         }
