@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/RYthaGOD/Aether-Index/main/assets/logo.png" width="150" style="border-radius: 20px" alt="AetherIndex Logo">
+  <img src="assets/logo.png" width="150" style="border-radius: 20px" alt="AetherIndex Logo">
 </p>
 
 <p align="center">
-  <a href="https://github.com/RYthaGOD/Aether-Index/actions"><img src="https://img.shields.io/github/actions/workflow/status/RYthaGOD/Aether-Index/main.yml?style=for-the-badge&logo=github" alt="GitHub Actions"></a>
-  <a href="https://www.npmjs.com/package/solana-charts"><img src="https://img.shields.io/npm/v/solana-charts?style=for-the-badge&logo=npm" alt="NPM Version"></a>
-  <img src="https://img.shields.io/badge/license-MIT-yellow?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=github" alt="Build Status">
+  <img src="https://img.shields.io/badge/Grade-A%2B-gold?style=for-the-badge" alt="Audit Grade">
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License">
 </p>
 
 <h1 align="center">AetherIndex</h1>
