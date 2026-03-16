@@ -1,14 +1,14 @@
 import { db } from '../db/client';
 import { SwapEvent } from './parser';
 import { pubsub } from './pubsub';
-import { AlphaDiscovery } from './alpha_discovery';
+
 
 export { pubsub };
 
 export class DataProcessor {
     private static buffer: SwapEvent[] = [];
-    private static MAX_BUFFER_SIZE = 10;
-    private static FLUSH_INTERVAL = 5000;
+    private static MAX_BUFFER_SIZE = 50;
+    private static FLUSH_INTERVAL = 10000;
     private static flushTimer: NodeJS.Timeout | null = null;
 
     /**

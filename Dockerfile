@@ -18,6 +18,9 @@ RUN npm install
 # Copy source and build
 COPY . .
 RUN npm run build
+RUN if [ -d "dist/src" ]; then cp -R dist/src/* dist/ && rm -rf dist/src; fi
+RUN mkdir -p dist/api/static && cp -R src/api/static/. dist/api/static/
+RUN cp src/db/*.sql dist/db/
 
 # Create persistent data volumes
 RUN mkdir -p /app/data/parquet /app/data/sqlite

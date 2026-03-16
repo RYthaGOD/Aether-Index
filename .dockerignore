@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+.git
+data
+.env.example
+docker-compose.yml
+railway.json
+README.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+LICENSE
+assets

@@ -129,6 +129,27 @@ class DBClient {
         });
     }
 
+    async resetTop100() {
+        return new Promise<void>((resolve) => {
+            this.sqlite.run('UPDATE tokens SET is_top_100 = 0', (err) => {
+                if (err) console.error('SQLite Reset Top100 Error:', err.message);
+                this.duckdbCon.run('UPDATE tokens SET is_top_100 = 0', (errD: any) => {
+                    if (errD) console.error('DuckDB Reset Top100 Error:', errD.message);
+                    resolve();
+                });
+            });
+        });
+    }
+
+    async resetTokenPools() {
+        return new Promise<void>((resolve) => {
+            this.sqlite.run('DELETE FROM token_pools', (err) => {
+                if (err) console.error('SQLite Reset TokenPools Error:', err.message);
+                resolve();
+            });
+        });
+    }
+
     async tokenExists(mint: string): Promise<boolean> {
         if (this.knownTokens.has(mint)) return true;
         
@@ -292,6 +313,26 @@ class DBClient {
             `;
             const param = `%${query}%`;
             this.sqlite.all(sql, [param, param, query], (err: Error | null, res: any) => {
+                if (err) reject(err);
+                else resolve(res);
+            });
+        });
+    }
+
+    async getArbitrageDensity(tokenAddress: string) {
+        const con = this.duckdb.connect();
+        const sql = `
+            SELECT 
+                time_bucket(INTERVAL '5 minute', timestamp) as window_start,
+                ((max(price_usd) - min(price_usd)) / avg(price_usd)) * 100 as gap_pct
+            FROM raw_swaps
+            WHERE token_address = '${tokenAddress}'
+            GROUP BY window_start
+            ORDER BY window_start DESC
+            LIMIT 100
+        `;
+        return new Promise((resolve, reject) => {
+            con.all(sql, (err: Error | null, res: any) => {
                 if (err) reject(err);
                 else resolve(res);
             });

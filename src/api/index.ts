@@ -49,6 +49,7 @@ const typeDefs = gql`
         raydium: Float
         orca: Float
         meteora: Float
+        jupiter: Float
         slot: Int
         timestamp: String
     }
@@ -80,12 +81,19 @@ const typeDefs = gql`
         total_volume: Float
         trade_count: Int
     }
+
+    type ArbitrageDensity {
+        window_start: String
+        gap_pct: Float
+    }
+
     type Query {
         getHistory(tokenAddress: String!, interval: String!): [Ohlcv]
         searchTokens(query: String!): [Token]
         getTop100Tokens: [Token]
         getTopMovers: [TopMover]
         getVolumeClusters: [VolumeCluster]
+        getArbitrageDensity(tokenAddress: String!): [ArbitrageDensity]
     }
 
     type Mutation {
@@ -140,6 +148,17 @@ const resolvers = {
                 return await db.getVolumeClusters();
             } catch (err) {
                 console.error('Error fetching volume clusters:', err);
+                return [];
+            }
+        },
+        getArbitrageDensity: async (_: any, { tokenAddress }: { tokenAddress: string }, context: any) => {
+            if (context.tier === 'FREE') {
+                throw new Error('PRO_REQUIRED: getArbitrageDensity requires a SHINOBI (PRO) tier or higher.');
+            }
+            try {
+                return await db.getArbitrageDensity(tokenAddress);
+            } catch (err) {
+                console.error('Error fetching arbitrage density:', err);
                 return [];
             }
         }
@@ -271,6 +290,7 @@ async function startServer() {
 
         // Initialize Sovereign Components asynchronously after startup
         try {
+            await db.init();
             WebhookReceiver.setup(app as any);
             await WebhookManager.orchestrate();
             // Market Guard Ignition
@@ -286,23 +306,8 @@ async function startServer() {
         }
     });
 
-    // Start High-Fidelity Price Broadcasting
-    setInterval(async () => {
-        try {
-            await PriceOracle.refreshSolPrice();
-            const drift = PriceOracle.getDrift();
-            if (drift.raydium > 0) {
-                const currentSlot = await solanaConnection.getSlot();
-                await pubsub.publish('PRICE_DRIFT_UPDATED', { priceDrift: {
-                    ...drift,
-                    slot: currentSlot,
-                    timestamp: drift.timestamp.toISOString()
-                }});
-            }
-        } catch (err) {
-            console.error('[Interval] Price drift broadcast failed:', err);
-        }
-    }, 500); // 500ms High-Fidelity Pulse
+    // Latency Reduction: Reactive On-Chain Account Subscriptions
+    PriceOracle.subscribeToSolPrice(pubsub);
 }
 
 startServer().catch(err => {

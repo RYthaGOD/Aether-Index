@@ -34,10 +34,13 @@ export const config = {
         // Now optional or used for local pub/sub only
         url: process.env.REDIS_URL || 'redis://localhost:6379',
     },
+    jupiter: {
+        apiKey: process.env.JUPITER_API_KEY || '',
+    },
     isReadOnly: process.env.READ_ONLY === 'true'
 };
 
 export const solanaConnection = new Connection(config.solana.rpcUrl, {
     wsEndpoint: config.solana.wsUrl,
-    commitment: 'confirmed',
+    commitment: 'processed',
 });

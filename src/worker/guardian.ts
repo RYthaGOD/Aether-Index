@@ -87,8 +87,8 @@ export class SocketGuardian {
             
             for (const event of events) {
                 console.log(`[Guardian] NEW SWAP [${event.dex}]: ${event.amountIn} ${event.tokenIn} -> ${event.amountOut} ${event.tokenOut}`);
-                await db.insertSwapToSQLite(event);
-                await db.insertToDuckDB([event]);
+                const { DataProcessor } = await import('./processor');
+                await DataProcessor.processSwap(event);
             }
         } catch (err: any) {
             console.error(`[Guardian] Error processing ${signature}:`, err.message);

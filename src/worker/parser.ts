@@ -17,6 +17,7 @@ export interface SwapEvent {
 
 export class PriceOracle {
     private static solPriceUsd: number = 0; 
+    private static pubsub: any = null;
     private static SOL_MINT = 'So11111111111111111111111111111111111111112';
     private static USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
     
@@ -33,6 +34,7 @@ export class PriceOracle {
         raydium: 0,
         orca: 0,
         meteora: 0,
+        jupiter: 0,
         timestamp: new Date()
     };
 
@@ -82,19 +84,90 @@ export class PriceOracle {
                 }
             }
 
-            // Set global anchor price (Raydium is typically most liquid)
-            if (this.latestDrift.raydium > 0) {
-                this.solPriceUsd = this.latestDrift.raydium;
-            } else if (this.latestDrift.orca > 0) {
-                this.solPriceUsd = this.latestDrift.orca;
+            // 4. Jupiter Price (via Quote API)
+            try {
+                const url = `https://api.jup.ag/swap/v1/quote?inputMint=${this.SOL_MINT}&outputMint=${this.USDC_MINT}&amount=100000000&slippageBps=50`;
+                const res = await axios.get(url, {
+                    headers: config.jupiter.apiKey ? { 'x-api-key': config.jupiter.apiKey } : {}
+                });
+                if (res.data && res.data.outAmount) {
+                    // SOL(9) to USDC(6)
+                    const inAmt = parseFloat(res.data.inAmount) / 1e9;
+                    const outAmt = parseFloat(res.data.outAmount) / 1e6;
+                    this.latestDrift.jupiter = outAmt / inAmt;
+                }
+            } catch (err) {}
+
+            // Set global anchor price (Average of all sources)
+            const activePrices = [this.latestDrift.raydium, this.latestDrift.orca, this.latestDrift.meteora, this.latestDrift.jupiter].filter(p => p > 0);
+            if (activePrices.length > 0) {
+                this.solPriceUsd = activePrices.reduce((a, b) => a + b, 0) / activePrices.length;
             }
 
             this.latestDrift.timestamp = new Date();
-            console.log(`[Oracle] Sol: $${this.solPriceUsd.toFixed(2)} | Drift: R$${this.latestDrift.raydium.toFixed(2)} O$${this.latestDrift.orca.toFixed(2)} M$${this.latestDrift.meteora.toFixed(2)}`);
-
+            // Broadcast after potential Jupiter update
+            if (PriceOracle.pubsub) {
+                await PriceOracle.pubsub.publish('PRICE_DRIFT_UPDATED', { priceDrift: {
+                    ...this.latestDrift,
+                    slot: await solanaConnection.getSlot('processed').catch(() => 0),
+                    timestamp: this.latestDrift.timestamp.toISOString()
+                }});
+            }
         } catch (err: any) {
             console.error('[Oracle] Price refresh failed:', err.message);
         }
+    }
+
+    static subscribeToSolPrice(pubsub: any) {
+        this.pubsub = pubsub;
+        console.log('[Oracle] Initializing Subscriptions for Sol Pricing (Latency Reduction)...');
+
+        // 1. Raydium Sol pricing decoder updates
+        solanaConnection.onAccountChange(this.RAYDIUM_POOL, async (info) => {
+            try {
+                const baseVault = new PublicKey(info.data.slice(336, 368));
+                const quoteVault = new PublicKey(info.data.slice(368, 400));
+                const [baseRes, quoteRes] = await Promise.all([
+                    solanaConnection.getTokenAccountBalance(baseVault),
+                    solanaConnection.getTokenAccountBalance(quoteVault)
+                ]);
+                if (baseRes.value.uiAmount && quoteRes.value.uiAmount) {
+                    this.latestDrift.raydium = quoteRes.value.uiAmount / baseRes.value.uiAmount;
+                    this.solPriceUsd = this.latestDrift.raydium;
+                    this.broadcastDrift(pubsub);
+                }
+            } catch (err) {}
+        });
+
+        // 2. Orca Sol pricing updates
+        solanaConnection.onAccountChange(this.ORCA_POOL, (info) => {
+            try {
+                const sqrtPriceX64 = BigInt('0x' + info.data.slice(65, 81).reverse().toString('hex'));
+                const sqrtPrice = Number(sqrtPriceX64) / Math.pow(2, 64);
+                this.latestDrift.orca = Math.pow(sqrtPrice, 2) * 1000;
+                this.broadcastDrift(pubsub);
+            } catch (err) {}
+        });
+
+        // 3. Meteora SOL pricing updates
+        solanaConnection.onAccountChange(this.METEORA_POOL, (info) => {
+            try {
+                const binStep = info.data.readUInt16LE(73); 
+                const activeId = info.data.readInt32LE(76); 
+                this.latestDrift.meteora = Math.pow(1 + binStep / 10000, activeId) * 1000;
+                this.broadcastDrift(pubsub);
+            } catch (err) {}
+        });
+    }
+
+    private static async broadcastDrift(pubsub: any) {
+        this.latestDrift.timestamp = new Date();
+        const currentSlot = await solanaConnection.getSlot('processed').catch(() => 0);
+        await pubsub.publish('PRICE_DRIFT_UPDATED', { priceDrift: {
+            ...this.latestDrift,
+            slot: currentSlot,
+            timestamp: this.latestDrift.timestamp.toISOString()
+        }});
     }
 
     static getDrift() {
@@ -194,40 +267,47 @@ export class SwapParser {
         const post = tx.meta?.postTokenBalances || [];
         const maker = pre[0]?.owner || 'Unknown';
 
-        // Balance change discovery logic
-        const changes: Map<string, number> = new Map();
+        const ownerDiffs: Map<string, Map<string, number>> = new Map();
         
         for (const p of post) {
-            if (p.owner !== maker) continue;
+            const owner = p.owner;
+            if (!owner) continue;
+            if (!ownerDiffs.has(owner)) ownerDiffs.set(owner, new Map());
+            
             const mint = p.mint;
             const postAmt = p.uiTokenAmount.uiAmount || 0;
-            const preAmt = pre.find(pr => pr.mint === mint && pr.owner === maker)?.uiTokenAmount.uiAmount || 0;
+            const preAmt = pre.find(pr => pr.mint === mint && pr.owner === owner)?.uiTokenAmount.uiAmount || 0;
             const diff = postAmt - preAmt;
-            if (Math.abs(diff) > 0) {
-                changes.set(mint, (changes.get(mint) || 0) + diff);
+            if (Math.abs(diff) > 0.000001) {
+                ownerDiffs.get(owner)!.set(mint, (ownerDiffs.get(owner)!.get(mint) || 0) + diff);
             }
         }
 
-        const tokens = Array.from(changes.entries());
-        if (tokens.length >= 2) {
-            const outToken = tokens.find(t => t[1] > 0);
-            const inToken = tokens.find(t => t[1] < 0);
+        for (const [owner, tokenChanges] of ownerDiffs.entries()) {
+            const changes = Array.from(tokenChanges.entries());
+            if (changes.length >= 2) {
+                const outToken = changes.find(t => t[1] > 0); // gained
+                const inToken = changes.find(t => t[1] < 0);  // lost
 
-            if (outToken && inToken) {
-                const event: SwapEvent = {
-                    signature,
-                    slot,
-                    blockTime,
-                    tokenIn: inToken[0],
-                    tokenOut: outToken[0],
-                    amountIn: Math.abs(inToken[1]),
-                    amountOut: outToken[1],
-                    priceUsd: 0,
-                    maker,
-                    dex
-                };
-                event.priceUsd = await PriceOracle.resolvePrice(event);
-                events.push(event);
+                if (outToken && inToken) {
+                    const event: SwapEvent = {
+                        signature,
+                        slot,
+                        blockTime,
+                        tokenIn: inToken[0],
+                        tokenOut: outToken[0],
+                        amountIn: Math.abs(inToken[1]),
+                        amountOut: outToken[1],
+                        priceUsd: 0,
+                        maker: owner,
+                        dex
+                    };
+                    event.priceUsd = await PriceOracle.resolvePrice(event);
+                    if (event.priceUsd > 0) {
+                        events.push(event);
+                        break; // Typically 1 main swapper per standard tx
+                    }
+                }
             }
         }
 

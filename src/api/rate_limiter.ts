@@ -19,7 +19,7 @@ export class RateLimiter {
         try {
             this.redis = createClient({ url: config.redis.url });
             this.redis.on('error', (err) => {
-                console.warn('[RateLimiter] Redis Error - Falling back to Memory:', err.message);
+                // console.warn('[RateLimiter] Redis Error - Falling back to Memory:', err.message);
                 this.isRedisEnabled = false;
             });
             await this.redis.connect();

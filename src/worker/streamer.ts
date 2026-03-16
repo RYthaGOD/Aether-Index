@@ -24,7 +24,7 @@ export class Streamer {
         // 2. Warming up the Oracle
         console.log('[Streamer] Initializing Price Oracle...');
         await PriceOracle.refreshSolPrice();
-        setInterval(() => PriceOracle.refreshSolPrice(), 60000); // Refresh every minute
+        setInterval(() => PriceOracle.refreshSolPrice(), 10000); // Higher frequency refresh (10s) for Arbs
 
         // 3. Start the Socket Guardian (Synthetic gRPC)
         console.log('[Streamer] Launching Socket Guardian...');
