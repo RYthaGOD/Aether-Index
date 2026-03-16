@@ -206,7 +206,9 @@ export class PriceOracle {
         try {
             // 1. Try Jupiter Public API (Extremely reliable for verified tokens)
             // Fix: Use the correct list API or specific token API
-            const jupRes = await axios.get(`https://api.jup.ag/tokens/v1/token/${mint}`).catch(() => null);
+            const jupRes = await axios.get(`https://api.jup.ag/tokens/v1/token/${mint}`, {
+                headers: config.jupiter.apiKey ? { 'x-api-key': config.jupiter.apiKey } : {}
+            }).catch(() => null);
             if (jupRes && jupRes.data) {
                 const { symbol, name, decimals } = jupRes.data;
                 const { db } = await import('../db/client');
