@@ -9,6 +9,9 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "dev": "npm run dev --workspace=@aether/core",
+    "create-module": "ts-node packages/aether-core/src/bin/aether-cli.ts create-module",
+    "simulate": "ts-node packages/aether-core/src/bin/simulate.ts",
+    "verify-upgrades": "ts-node packages/aether-core/src/bin/verify-upgrades.ts",
     "start": "npm run start --workspace=@aether/core",
     "test": "npm test --workspaces"
   },

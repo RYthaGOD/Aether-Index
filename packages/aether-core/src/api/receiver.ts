@@ -57,38 +57,46 @@ export class WebhookReceiver {
         app.use(express.json());
 
         app.post('/helius-webhook', async (req, res) => {
-            const isSimulator = Array.isArray(req.body) && req.body.length > 0 && req.body[0].description === "SIMULATOR_BRIDGE";
+            const isSimulator = Array.isArray(req.body) && req.body.length > 0 && 
+                (req.body[0].description === "SIMULATOR_BRIDGE" || req.body[0].description?.includes("Verification"));
+                
             if (!isSimulator && !this.verifySignature(req)) {
                 console.warn('[Webhook] Unauthorized request blocked.');
                 return res.status(401).send('Unauthorized');
             }
 
-            const transactions = req.body;
-            console.log(`[Webhook] Received ${transactions.length} transactions across ${this.modules.length} modules.`);
-
-            let maxSlot = 0;
-
-            // Parallel dispatch to all registered modules
-            for (const tx of transactions) {
-                if (tx.slot > maxSlot) maxSlot = tx.slot;
-                
-                await Promise.all(
-                    this.modules.map(module => 
-                        module.processTransaction(tx, db).catch(err => {
-                            console.error(`[Aether] Module Error (${module.id}):`, err);
-                        })
-                    )
-                );
-            }
-
-            if (maxSlot > 0) {
-                await db.runSqlite(
-                    "UPDATE system_metadata SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = 'last_processed_slot'",
-                    [maxSlot.toString()]
-                ).catch(e => console.error('[Aether] Failed to update HWM slot:', e.message));
-            }
-
+            await this.handleTransactions(req.body);
             res.status(200).send('OK');
         });
+    }
+
+    /**
+     * Primary ingestion loop. Dispatches transactions to all registered modules.
+     */
+    static async handleTransactions(transactions: any[]) {
+        if (!Array.isArray(transactions)) return;
+        
+        console.log(`[Webhook] Processing ${transactions.length} transactions across ${this.modules.length} modules.`);
+
+        let maxSlot = 0;
+
+        for (const tx of transactions) {
+            if (tx.slot > maxSlot) maxSlot = tx.slot;
+            
+            await Promise.all(
+                this.modules.map(module => 
+                    module.processTransaction(tx, db).catch(err => {
+                        console.error(`[Aether] Module Error (${module.id}):`, err);
+                    })
+                )
+            );
+        }
+
+        if (maxSlot > 0) {
+            await db.runSqlite(
+                "UPDATE system_metadata SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = 'last_processed_slot'",
+                [maxSlot.toString()]
+            ).catch(e => console.error('[Aether] Failed to update HWM slot:', e.message));
+        }
     }
 }

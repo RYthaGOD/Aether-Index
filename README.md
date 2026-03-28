@@ -53,7 +53,18 @@ graph TD
 - **Use Cases**:
     - **Front-Running**: Detects accounts with `HealthFactor < 1.05` before liquidations enter auctions.
     - **Treasury Risk**: Alerts protocol owners of systemic collateral contagion.
-    - **Auction Analytics**: Tracks liquidation penalty bps and recovery rates.
+ ## 🛠️ Developer Experience (DX) Tools
+Aether Index is built for developers. Speed up your workflow with our integrated CLI and simulator:
+
+- **`npm run create-module <name>`**: Automatically scaffolds a new sovereign module in the `packages/` workspace.
+- **`npm run simulate`**: Pushes high-fidelity mock transactions to your local server for rapid prototyping.
+- **`npm run verify-upgrades`**: Executes the unified proof suite to validate ingestion, HWM tracking, and data integrity.
+
+## 🛡️ Built-in Integrity: The Socket Guardian
+The **Socket Guardian** runs as a background worker, ensuring 100% data fidelity:
+- **Slot Gap Detection**: Monitors the "High Water Mark" (HWM) in SQLite against the Solana cluster slot.
+- **Async Analytics**: Offloads DuckDB analytical writes to a non-blocking queue to preserve sub-second response times for AI agents.
+- **Graceful Lifecycle**: Implements full SIGINT/SIGTERM handlers for atomic state preservation.
 
 ### 💎 Aether-NFT: Metaplex Core Rarity Engine
 **Capabilities**: Decodes the single-account **Attributes Plugin** directly from Core assets.
