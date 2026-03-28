@@ -10,11 +10,33 @@ export class WebhookReceiver {
     private static modules: AetherModule[] = [];
 
     /**
-     * Registers a new module with the Aether Core.
+     * Registers and initializes a new module with the Aether Core.
      */
-    static registerModule(module: AetherModule) {
+    static async registerModule(module: AetherModule) {
         console.log(`[Aether] Loading Module: ${module.name} (${module.id})`);
-        this.modules.push(module);
+        try {
+            await module.initialize(db);
+            this.modules.push(module);
+            console.log(`[Aether] Module Ready: ${module.id}`);
+        } catch (err) {
+            console.error(`[Aether] Failed to initialize module ${module.id}:`, err);
+            throw err;
+        }
+    }
+
+    /**
+     * Gracefully shuts down all registered modules.
+     */
+    static async shutdown() {
+        console.log('[Aether] Shutting down all modules...');
+        await Promise.all(
+            this.modules.map(module => 
+                module.shutdown ? module.shutdown().catch(err => {
+                    console.error(`[Aether] Shutdown Error (${module.id}):`, err);
+                }) : Promise.resolve()
+            )
+        );
+        console.log('[Aether] All modules offline.');
     }
 
     /**

@@ -67,15 +67,26 @@ async function startServer() {
             
             // Module Registration Phase
             // ================================================
-            WebhookReceiver.registerModule(new ShardLockModule());
-            WebhookReceiver.registerModule(new AgenticModule());
-            WebhookReceiver.registerModule(new ZkModule());
-            WebhookReceiver.registerModule(new LendingModule());
-            WebhookReceiver.registerModule(new NftModule());
+            await WebhookReceiver.registerModule(new ShardLockModule());
+            await WebhookReceiver.registerModule(new AgenticModule());
+            await WebhookReceiver.registerModule(new ZkModule());
+            await WebhookReceiver.registerModule(new LendingModule());
+            await WebhookReceiver.registerModule(new NftModule());
             // ================================================
 
             WebhookReceiver.setup(app as any);
             await WebhookManager.orchestrate().catch(e => console.error('[Librarian] Helius Orchestration Warning:', e.message));
+
+            // Graceful Shutdown Logic
+            const shutdown = async () => {
+                console.log('\n[Librarian] Termination signal received.');
+                await WebhookReceiver.shutdown();
+                process.exit(0);
+            };
+
+            process.on('SIGINT', shutdown);
+            process.on('SIGTERM', shutdown);
+
         } catch (err) {
             console.error('⚠️ Librarian initialization failed:', err);
         }
