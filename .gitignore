@@ -1,5 +1,5 @@
-# PRO Features (Local-only, not for public repo)
-pro/
+# PRO Features (Temporarily un-ignored for Railway deployment)
+# pro/
 
 # Dependency directories
 node_modules/

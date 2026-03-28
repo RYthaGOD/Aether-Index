@@ -1,0 +1,39 @@
+{
+  "name": "@aether/core",
+  "version": "1.0.0",
+  "description": "Aether Index Core Engine",
+  "main": "dist/api/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/api/index.js",
+    "dev": "ts-node src/api/index.ts"
+  },
+  "dependencies": {
+    "aether-shared": "*",
+    "@raydium-io/raydium-sdk": "^1.3.1-beta.58",
+    "@solana/buffer-layout": "^4.0.1",
+    "@solana/web3.js": "^1.98.4",
+    "apollo-server-express": "^3.13.0",
+    "axios": "^1.13.6",
+    "chalk": "^4.1.2",
+    "commander": "^14.0.3",
+    "dotenv": "^17.3.1",
+    "duckdb": "^1.4.4",
+    "express": "^4.19.2",
+    "graphql": "^16.13.1",
+    "graphql-subscriptions": "^3.0.0",
+    "helius-sdk": "^2.2.2",
+    "inquirer": "^8.2.7",
+    "ora": "^5.4.1",
+    "redis": "^5.11.0",
+    "sqlite3": "^5.1.7",
+    "subscriptions-transport-ws": "^0.11.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/inquirer": "^8.2.12",
+    "@types/node": "^25.5.0",
+    "@types/sqlite3": "^3.1.11"
+  }
+}

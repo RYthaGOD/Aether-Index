@@ -1,41 +1,36 @@
-# AetherIndex
+# Aether Index: High-Performance Modular Engine
 
-A high-performance Solana indexing engine designed for data integrity and analytical speed. AetherIndex processes on-chain events into a dual-database architecture, providing sub-50ms query responses for token data and market metrics.
+Aether Index is a professional-grade, plug-and-play indexing engine for the Solana ecosystem. It is designed to transform raw on-chain events into structured, multi-database (SQLite + DuckDB) state with sub-second latency.
 
 ---
 
-## Core Capabilities
+## 🏛️ Modular Architecture (NPM Workspaces)
 
-### 1. Reliable Real-time Indexing
-- **Multi-Source Ingestion**: Ingests data via Helius Webhooks and standard RPC WebSocket subscriptions.
-- **Socket Guardian**: A background process that detects slot gaps in real-time and automatically executes depth-calculating patch requests to ensure 100% data integrity.
-- **HMAC Verification**: Ensures data authenticity by verifying SHA256 signatures for incoming Helius webhooks.
+The project is structured as a monorepo to ensure strict protocol isolation and developer ease-of-use:
+
+- **`@aether/core`**: The central ingestion engine (Helius Webhooks) and dynamic module dispatcher.
+- **`aether-agentic`**: Semantic narrative engine for AI agents (MCP).
+- **`aether-zk`**: ZK-compression state auditor for Light Protocol.
+- **`aether-lending`**: Risk & liquidation monitor (Kamino/Save).
+- **`aether-nft`**: Metaplex Core rarity & metadata indexer.
+- **`aether-shared`**: Common interfaces for plug-and-play development.
+
+---
+
+## 🚀 Core Capabilities
+
+### 1. Dynamic Module Dispatcher
+- **Parallel Processing**: Broadcasts transactions to all registered modules concurrently for near-zero latency.
+- **Plug-and-Play**: Add new protocol support by simply implementing the `AetherModule` interface and registering it in the core.
+- **HMAC Verification**: Ensures data authenticity for all incoming webhooks.
 
 ### 2. Analytical Engine
-- **Hybrid Storage**: Uses **SQLite** for transactional consistency and **DuckDB** for vectorized analytical processing.
-- **Market Data Processing**: Automatically calculates OHLCV, volume clusters, and top movers directly from raw on-chain swap logs.
-- **On-Demand Discovery**: Capable of indexing specific tokens or markets on-demand via API triggers.
+- **Hybrid Storage**: Uses **SQLite** for consistency and **DuckDB** for vectorized analytics.
+- **Multi-DB Support**: Each module can manage its own schema sovereignly within the shared database clients.
 
-### 3. API & Access Control
-- **Unified GraphQL Feed**: Access all indexed data through a centralized GraphQL endpoint.
-- **Redis-Backed Tiers**: Robust rate limiting and service tier management (Free, Pro, Institutional) that persists across server restarts.
-- **CLI Utilities**: Command-line tools for developer onboarding, historical backfilling, and system health verification.
-
----
-
-## Architecture
-
-```mermaid
-graph TD
-    A[Solana Mainnet] -- HMAC WSS --> B(Socket Guardian)
-    B -- Gap Detection --> C{Gap?}
-    C -- Yes --> D[RPC Patching]
-    C -- No --> E[Parser Engine]
-    E -- Event Analysis --> F(Storage Layer)
-    F -- Vectorized SQL --> G[DuckDB / SQLite]
-    G --> H[GraphQL API]
-    H -- Redis Persistence --> I[Access Management]
-```
+### 3. Agentic Interoperability
+- **MCP Native**: Implements the Model Context Protocol for seamless integration with AI agents like ElizaOS.
+- **Semantic Narratives**: Transforms complex on-chain logs into machine-readable narratives.
 
 ---
 
