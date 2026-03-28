@@ -1,7 +1,7 @@
 import express from 'express';
 import crypto from 'crypto';
 import { config } from '../config';
-import { AetherModule } from '../../shared';
+import { AetherModule } from 'aether-shared';
 import { db } from '../db/client';
 
 const router = express.Router();
@@ -66,8 +66,12 @@ export class WebhookReceiver {
             const transactions = req.body;
             console.log(`[Webhook] Received ${transactions.length} transactions across ${this.modules.length} modules.`);
 
+            let maxSlot = 0;
+
             // Parallel dispatch to all registered modules
             for (const tx of transactions) {
+                if (tx.slot > maxSlot) maxSlot = tx.slot;
+                
                 await Promise.all(
                     this.modules.map(module => 
                         module.processTransaction(tx, db).catch(err => {
@@ -75,6 +79,13 @@ export class WebhookReceiver {
                         })
                     )
                 );
+            }
+
+            if (maxSlot > 0) {
+                await db.runSqlite(
+                    "UPDATE system_metadata SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = 'last_processed_slot'",
+                    [maxSlot.toString()]
+                ).catch(e => console.error('[Aether] Failed to update HWM slot:', e.message));
             }
 
             res.status(200).send('OK');

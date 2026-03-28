@@ -63,13 +63,32 @@ class DBClient {
         });
     }
 
+    private duckdbQueue: { sql: string, params: any[] }[] = [];
+    private isProcessingQueue = false;
+
     async runDuckDB(sql: string, params: any[] = []) {
-        return new Promise<void>((resolve, reject) => {
-            this.duckdbCon.run(sql, params, (err: any) => {
-                if (err) reject(err);
-                else resolve();
+        // Queue the write and process it in the background
+        this.duckdbQueue.push({ sql, params });
+        this.processDuckDBQueue();
+    }
+
+    private async processDuckDBQueue() {
+        if (this.isProcessingQueue || this.duckdbQueue.length === 0) return;
+        this.isProcessingQueue = true;
+
+        while (this.duckdbQueue.length > 0) {
+            const item = this.duckdbQueue.shift();
+            if (!item) continue;
+
+            await new Promise<void>((resolve) => {
+                this.duckdbCon.run(item.sql, item.params, (err: any) => {
+                    if (err) console.error('[DuckDB] Async Write Error:', err.message);
+                    resolve();
+                });
             });
-        });
+        }
+
+        this.isProcessingQueue = false;
     }
 
     async execSqlite(sql: string) {

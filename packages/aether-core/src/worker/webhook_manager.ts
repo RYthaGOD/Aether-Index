@@ -23,7 +23,11 @@ export class WebhookManager {
                 webhookURL: config.helius.webhookUrl,
                 transactionTypes: ["ANY"],
                 accountAddresses: [
-                    'GtmN6x2aPYq6LkbJTj1qxm5Jn6zGQNWsgG9NFnx1QaEu'  // Seeker Swarm (Librarian)
+                    'GtmN6x2aPYq6LkbJTj1qxm5Jn6zGQNWsgG9NFnx1QaEu', // Seeker Swarm (Librarian)
+                    'KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD', // Kamino KLend V2
+                    'So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo', // Save (Solend)
+                    'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d', // Metaplex Core
+                    'SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7'  // Light System (ZK)
                 ],
                 webhookType: "enhanced"
             };

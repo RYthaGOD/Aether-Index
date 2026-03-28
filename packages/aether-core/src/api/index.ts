@@ -6,6 +6,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { db } from '../db/client';
 import { WebhookReceiver } from './receiver';
 import { WebhookManager } from '../worker/webhook_manager';
+import { GuardWorker } from '../worker/guardian';
 import { config } from '../config';
 import { ShardLockModule } from '../modules/shard_lock';
 import { AgenticModule } from '../../aether-agentic/src/index';
@@ -76,6 +77,7 @@ async function startServer() {
 
             WebhookReceiver.setup(app as any);
             await WebhookManager.orchestrate().catch(e => console.error('[Librarian] Helius Orchestration Warning:', e.message));
+            await GuardWorker.start();
 
             // Graceful Shutdown Logic
             const shutdown = async () => {

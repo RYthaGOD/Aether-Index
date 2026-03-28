@@ -19,3 +19,12 @@ CREATE INDEX IF NOT EXISTS idx_shard_locks_status
 
 CREATE INDEX IF NOT EXISTS idx_shard_locks_heartbeat
     ON shard_locks(last_heartbeat);
+
+-- System Metadata Table: High Water Mark tracking
+CREATE TABLE IF NOT EXISTS system_metadata (
+    key TEXT PRIMARY KEY,
+    value TEXT,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT OR IGNORE INTO system_metadata (key, value) VALUES ('last_processed_slot', '0');

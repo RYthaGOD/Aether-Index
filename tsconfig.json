@@ -7,8 +7,13 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "./dist",
-    "strict": false
+    "strict": false,
+    "baseUrl": ".",
+    "paths": {
+      "aether-shared": ["packages/shared/index.ts"],
+      "@aether/core/*": ["packages/aether-core/src/*"]
+    }
   },
-  "include": ["src/**/*", "pro/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["packages/**/*"],
+  "exclude": ["node_modules", "**/dist"]
 }
