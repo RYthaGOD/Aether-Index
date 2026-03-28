@@ -1,4 +1,4 @@
-import { AetherModule } from "../../shared";
+import { AetherModule } from 'aether-shared';
 
 /**
  * Aether-Agentic Module
