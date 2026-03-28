@@ -12,10 +12,16 @@ export class WebhookReceiver {
     /**
      * Registers and initializes a new module with the Aether Core.
      */
-    static async registerModule(module: AetherModule) {
+    static async registerModule(module: AetherModule, app?: any) {
         console.log(`[Aether] Loading Module: ${module.name} (${module.id})`);
         try {
             await module.initialize(db);
+            
+            // Dynamic API Discovery & Registration
+            if (app && module.extendServer) {
+                module.extendServer(app);
+            }
+            
             this.modules.push(module);
             console.log(`[Aether] Module Ready: ${module.id}`);
         } catch (err) {

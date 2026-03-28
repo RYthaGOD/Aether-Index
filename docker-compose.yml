@@ -1,28 +1,24 @@
 version: '3.8'
 
 services:
-  aether-index:
-    build: .
-    container_name: aether-index
-    restart: unless-stopped
+  aether-engine:
+    build: 
+      context: .
+      dockerfile: packages/aether-core/Dockerfile
     env_file: .env
-    environment:
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    volumes:
-      - ./data:/app/data
     ports:
       - "4000:4000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4000/graphql"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    volumes:
+      - ./data:/app/data
+    restart: always
 
-  redis:
-    image: redis:alpine
-    container_name: aether-redis
-    restart: unless-stopped
+  # Optional: Redis for high-speed caching
+  aether-cache:
+    image: redis:6.2-alpine
     ports:
       - "6379:6379"
+    restart: always
+
+networks:
+  default:
+    name: aether-network

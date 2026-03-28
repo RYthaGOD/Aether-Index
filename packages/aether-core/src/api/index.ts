@@ -68,11 +68,11 @@ async function startServer() {
             
             // Module Registration Phase
             // ================================================
-            await WebhookReceiver.registerModule(new ShardLockModule());
-            await WebhookReceiver.registerModule(new AgenticModule());
-            await WebhookReceiver.registerModule(new ZkModule());
-            await WebhookReceiver.registerModule(new LendingModule());
-            await WebhookReceiver.registerModule(new NftModule());
+            await WebhookReceiver.registerModule(new ShardLockModule(), app);
+            await WebhookReceiver.registerModule(new AgenticModule(), app);
+            await WebhookReceiver.registerModule(new ZkModule(), app);
+            await WebhookReceiver.registerModule(new LendingModule(), app);
+            await WebhookReceiver.registerModule(new NftModule(), app);
             // ================================================
 
             WebhookReceiver.setup(app as any);

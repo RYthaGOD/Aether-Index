@@ -42,4 +42,18 @@ export class ZkModule implements AetherModule {
       }
     }
   }
+
+  extendServer(app: any): void {
+    console.log("[ZK] Registering API: /api/zk/proofs");
+
+    app.get('/api/zk/proofs', async (req: any, res: any) => {
+        const { db } = require('../../aether-core/src/db/client');
+        try {
+          const rows = await db.querySqlite("SELECT * FROM zk_proof_logs ORDER BY timestamp DESC LIMIT 100");
+          res.json(rows);
+        } catch (err) {
+          res.status(500).json({ error: "Failed to fetch proof logs" });
+        }
+      });
+  }
 }

@@ -47,4 +47,28 @@ export class LendingModule implements AetherModule {
       }
     }
   }
+
+  extendServer(app: any): void {
+    console.log("[Lending] Registering API: /api/lending/liquidations");
+    
+    app.get('/api/lending/liquidations', async (req: any, res: any) => {
+      const { db } = require('../../aether-core/src/db/client');
+      try {
+        const rows = await db.querySqlite("SELECT * FROM lending_liquidations ORDER BY timestamp DESC LIMIT 50");
+        res.json(rows);
+      } catch (err) {
+        res.status(500).json({ error: "Failed to fetch liquidations" });
+      }
+    });
+
+    app.get('/api/lending/protocol/:id', async (req: any, res: any) => {
+        const { db } = require('../../aether-core/src/db/client');
+        try {
+          const rows = await db.querySqlite("SELECT * FROM lending_liquidations WHERE protocol = ? ORDER BY timestamp DESC", [req.params.id]);
+          res.json(rows);
+        } catch (err) {
+          res.status(500).json({ error: "Failed to fetch protocol data" });
+        }
+      });
+  }
 }

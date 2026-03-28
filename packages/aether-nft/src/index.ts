@@ -36,4 +36,18 @@ export class NftModule implements AetherModule {
       }
     }
   }
+
+  extendServer(app: any): void {
+    console.log("[NFT] Registering API: /api/nft/rarity/:mint");
+
+    app.get('/api/nft/rarity/:mint', async (req: any, res: any) => {
+        const { db } = require('../../aether-core/src/db/client');
+        try {
+          const rows = await db.querySqlite("SELECT * FROM nft_assets WHERE mint = ?", [req.params.mint]);
+          res.json(rows[0] || { error: "Asset not found" });
+        } catch (err) {
+          res.status(500).json({ error: "Failed to fetch rarity data" });
+        }
+      });
+  }
 }

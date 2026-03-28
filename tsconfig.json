@@ -11,7 +11,8 @@
     "baseUrl": ".",
     "paths": {
       "aether-shared": ["packages/shared/index.ts"],
-      "@aether/core/*": ["packages/aether-core/src/*"]
+      "@aether/core/*": ["packages/aether-core/src/*"],
+      "@aether/sdk": ["packages/aether-sdk/src/index.ts"]
     }
   },
   "include": ["packages/**/*"],

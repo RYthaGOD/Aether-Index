@@ -40,4 +40,11 @@ export interface AetherModule {
    * Optional cleanup logic performed when the engine shuts down.
    */
   shutdown?(): Promise<void>;
+
+  /**
+   * Universal Integration: Allows modules to dynamically register their 
+   * own API routes/endpoints (REST, GraphQL, etc.) to the core server.
+   * @param app The Express application instance from the core engine.
+   */
+  extendServer?(app: any): void;
 }

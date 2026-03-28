@@ -19,6 +19,20 @@ export class ShardLockModule implements AetherModule {
     console.log("[ShardLock] Initialized.");
   }
 
+  extendServer(app: any): void {
+    console.log("[ShardLock] Registering API: /api/shard-lock/locations/:merkleRoot");
+
+    app.get('/api/shard-lock/locations/:merkleRoot', async (req: any, res: any) => {
+        const { db } = require('../../aether-core/src/db/client');
+        try {
+          const rows = await db.querySqlite("SELECT * FROM shard_locks WHERE merkle_root = ? AND status = 'ONLINE'", [req.params.merkleRoot]);
+          res.json(rows);
+        } catch (err) {
+          res.status(500).json({ error: "Failed to fetch shard locations" });
+        }
+      });
+  }
+
   async processTransaction(tx: EnhancedTransaction, db: any): Promise<void> {
     const instructions = tx.instructions || [];
     for (const ix of instructions) {

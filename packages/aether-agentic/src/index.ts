@@ -46,4 +46,18 @@ export class AgenticModule implements AetherModule {
     // Simple reconstruction for now; in production this uses a vector embedding suite
     return `Transaction ${tx.signature.slice(0, 8)}: ${tx.description} at slot ${tx.slot}`;
   }
+
+  extendServer(app: any): void {
+    console.log("[Agentic] Registering API: /api/agentic/narratives");
+
+    app.get('/api/agentic/narratives', async (req: any, res: any) => {
+        const { db } = require('../../aether-core/src/db/client');
+        try {
+          const rows = await db.querySqlite("SELECT * FROM agent_narratives ORDER BY timestamp DESC LIMIT 100");
+          res.json(rows);
+        } catch (err) {
+          res.status(500).json({ error: "Failed to fetch narratives" });
+        }
+      });
+  }
 }
