@@ -30,22 +30,68 @@ graph TD
     end
 ```
 
-### 📦 Package Registry
+---
 
-| Package | Purpose | Standard/Protocol |
-| :--- | :--- | :--- |
-| **`@aether/core`** | Ingestion & Dispatcher | Helius Enhanced Webhooks |
-| **`aether-agentic`** | Cognitive Narrative Engine | Model Context Protocol (MCP) |
-| **`aether-zk`** | ZK-Compression Auditor | Light Protocol v3 |
-| **`aether-lending`** | Risk & Liquidation Guard | Kamino V2 / Save (Solend) |
-| **`aether-nft`** | Rarity & Metadata Engine | Metaplex Core |
-| **`aether-shared`** | Unified Interfaces | AetherModule Contract |
+## 📦 Detailed Project Registry
+
+### 🧠 Aether-Agentic: Cognitive Narrative Engine
+**Capabilities**: Transforms raw swap, burn, and mint events into structured Markdown "Semantic Narratives".
+- **Use Cases**: 
+    - **Memory Calls**: Speeds up agent memory retrieval by providing pre-processed story-context instead of raw JSON.
+    - **RAG Optimization**: Serves as a direct feed for Vector Databases (Milvus/Pinecone).
+    - **Interoperability**: Native MCP/elizaOS skill support.
+
+### 🛡️ Aether-zk: Compression Proof Auditor
+**Capabilities**: Monitors Light Protocol v3 transitions and verifies Groth16 proofs against on-chain state roots.
+- **Use Cases**:
+    - **State Verification**: Acts as a secondary auditor for Photon indexers.
+    - **Light Client Support**: Provides verifiable inclusion proofs for ZK-compressed assets.
+    - **Analytical History**: Historical range queries on compressed state in DuckDB.
+
+### ⚖️ Aether-Lending: Risk & Liquidation Guard
+**Capabilities**: Decodes 1784-byte Obligation structs for Kamino V2 and Save (formerly Solend).
+- **Use Cases**:
+    - **Front-Running**: Detects accounts with `HealthFactor < 1.05` before liquidations enter auctions.
+    - **Treasury Risk**: Alerts protocol owners of systemic collateral contagion.
+    - **Auction Analytics**: Tracks liquidation penalty bps and recovery rates.
+
+### 💎 Aether-NFT: Metaplex Core Rarity Engine
+**Capabilities**: Decodes the single-account **Attributes Plugin** directly from Core assets.
+- **Use Cases**:
+    - **Instant Rarity**: Real-time ranking during high-velocity mints.
+    - **DAS API Surrogate**: Specialized trait indexing that bypasses slower IPFS/Arweave lookups.
+    - **Leaderboards**: Statistical rarity updates for gaming and cultural assets.
+
+---
+
+## 🗺️ The 2026 Modular Roadmap
+
+Beyond the "Core Four," Aether Index is ready to house the next generation of plug-and-play modules:
+
+1. **Aether-Governance**: Real-time DAO proposal tracking and voter weight auditing.
+2. **Aether-MEV**: Jito bundle monitoring and sandwich attack detection.
+3. **Aether-Privacy**: Tracking Elusiv/Light shielded pool liquidity flows.
+4. **Aether-Oracle**: Pyth/Firedancer heartbeat health and deviation auditing.
+5. **Aether-Yield**: Cross-protocol APY comparison and strategy optimization.
+6. **Aether-Swap**: Multi-DEX liquidity aggregator and slippage tracer.
+7. **Aether-Bridge**: Cross-chain portal/wormhole inventory tracking.
+8. **Aether-Insurance**: Claims monitoring and risk-pool utilization indexing.
+9. **Aether-Gaming**: On-chain state tracking for P2E economies and asset durability.
+10. **Aether-Social**: Farcaster/Lens-on-Solana identity and reputation indexing.
+11. **Aether-Identity**: Verifiable Credential and xNFT ownership verification.
+12. **Aether-Compute**: GPU/CPU marketplace utilization (Render/Nosana) monitoring.
+13. **Aether-Storage**: Global shard distribution tracking for Seeker Swarm.
+14. **Aether-Bandwidth**: Indexing decentralised CDN consumption and routing logs.
+15. **Aether-Stablecoin**: Collateralization ratio and peg-stability monitoring.
+16. **Aether-Options**: Volatility indices and smart-option settlement tracking.
+17. **Aether-Treasury**: Automated DAO fund management and spending audit logs.
+18. **Aether-Compliance**: On-chain AML/KYC screening for institutional gateways.
+19. **Aether-Derivatives**: Perp funding rates and open interest tracking.
+20. **Aether-Prediction**: Outcome settlement and liquidity depth for prediction markets.
 
 ---
 
 ## ✅ Verification Status
-
-Every module in this repository is **100% verified** against Mainnet 2026 standards. Validation logs are included in each package subdirectory.
 
 | Module | Verification Target | Status |
 | :--- | :--- | :--- |
@@ -54,48 +100,21 @@ Every module in this repository is **100% verified** against Mainnet 2026 standa
 | **ZK Auditor** | State Root Extraction | 🟢 VERIFIED |
 | **Lending Guard** | Liquidation Event Filtering | 🟢 VERIFIED |
 | **NFT Rarity** | Attribute Indexing | 🟢 VERIFIED |
-| **Shard-Lock** | Heartbeat Parsing | 🟢 VERIFIED |
 
 ---
 
 ## 🚀 Professional Quickstart
 
-### 1. Project Initialization
 ```bash
-# Install dependencies across all workspaces
-npm install
+# 1. Setup monorepo
+npm install && npm run build
 
-# Build the core engine and shared types
-npm run build
-```
+# 2. Configure Node
+# Add Helius Webhook keys to .env at root
 
-### 2. Configure Environment
-Update your `.env` at the root with your Helius API keys and Webhook secrets.
-```env
-HELIUS_API_KEY=your_key_here
-HELIUS_WEBHOOK_SECRET=your_secret_here
-```
-
-### 3. Launch the Engine
-```bash
-# Start the Core Indexer in development mode
+# 3. Launch the Engine
 npm run dev
 ```
-
----
-
-## 🛠️ Extending the Engine
-
-Aether Index is designed to be infinitely extensible. To add a new protocol use-case:
-
-1. **Implement**: Create a new package and implement the `AetherModule` interface.
-2. **Register**: Import and register your module in `packages/aether-core/src/api/index.ts`.
-3. **Deploy**: The dispatcher will automatically begin routing relevant transactions to your new logical layer.
-
----
-
-## 💎 Design Philosophy
-Built with **Radical Simplicity** and **High Agency**. Aether Index doesn't just store data; it envisions a future where AI agents have instant, machine-readable access to the entire state of Solana.
 
 ---
 
