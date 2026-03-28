@@ -75,21 +75,6 @@ The **Socket Guardian** runs as a background worker, ensuring 100% data fidelity
 
 ---
 
-## 🗺️ The 2026 Modular Roadmap
-
-Beyond the "Core Four," Aether Index is ready to house the next generation of plug-and-play modules:
-
-1. **Aether-Governance**: Real-time DAO proposal tracking and voter weight auditing.
-2. **Aether-MEV**: Jito bundle monitoring and sandwich attack detection.
-3. **Aether-Privacy**: Tracking Elusiv/Light shielded pool liquidity flows.
-4. **Aether-Oracle**: Pyth/Firedancer heartbeat health and deviation auditing.
-5. **Aether-Yield**: Cross-protocol APY comparison and strategy optimization.
-6. **Aether-Swap**: Multi-DEX liquidity aggregator and slippage tracer.
-7. **Aether-Bridge**: Cross-chain portal/wormhole inventory tracking.
-8. **Aether-Insurance**: Claims monitoring and risk-pool utilization indexing.
-9. **Aether-Gaming**: On-chain state tracking for P2E economies and asset durability.
-10. **Aether-Social**: Farcaster/Lens-on-Solana identity and reputation indexing.
-11. **Aether-Identity**: Verifiable Credential and xNFT ownership verification.
 12. **Aether-Compute**: GPU/CPU marketplace utilization (Render/Nosana) monitoring.
 13. **Aether-Storage**: Global shard distribution tracking for Seeker Swarm.
 14. **Aether-Bandwidth**: Indexing decentralised CDN consumption and routing logs.
