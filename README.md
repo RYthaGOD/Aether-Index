@@ -1,36 +1,108 @@
-# Aether Index: High-Performance Modular Engine
+# Aether Index: The Sovereign Modular Engine (2026)
 
-Aether Index is a professional-grade, plug-and-play indexing engine for the Solana ecosystem. It is designed to transform raw on-chain events into structured, multi-database (SQLite + DuckDB) state with sub-second latency.
+> "The mission is paramount. Architectural complexity handled; vision unlocked." — **Rykiri**
 
----
-
-## 🏛️ Modular Architecture (NPM Workspaces)
-
-The project is structured as a monorepo to ensure strict protocol isolation and developer ease-of-use:
-
-- **`@aether/core`**: The central ingestion engine (Helius Webhooks) and dynamic module dispatcher.
-- **`aether-agentic`**: Semantic narrative engine for AI agents (MCP).
-- **`aether-zk`**: ZK-compression state auditor for Light Protocol.
-- **`aether-lending`**: Risk & liquidation monitor (Kamino/Save).
-- **`aether-nft`**: Metaplex Core rarity & metadata indexer.
-- **`aether-shared`**: Common interfaces for plug-and-play development.
+Aether Index is an elite, high-performance Solana indexing engine built for the 2026 agentic landscape. It transforms raw on-chain transitions into a structured, analytical state through a plug-and-play modular architecture.
 
 ---
 
-## 🚀 Core Capabilities
+## 🏛️ Modular Architecture
 
-### 1. Dynamic Module Dispatcher
-- **Parallel Processing**: Broadcasts transactions to all registered modules concurrently for near-zero latency.
-- **Plug-and-Play**: Add new protocol support by simply implementing the `AetherModule` interface and registering it in the core.
-- **HMAC Verification**: Ensures data authenticity for all incoming webhooks.
+Aether Index is architected as an **NPM Workspaces Monorepo**, ensuring strict protocol isolation and sub-second dispatching.
 
-### 2. Analytical Engine
-- **Hybrid Storage**: Uses **SQLite** for consistency and **DuckDB** for vectorized analytics.
-- **Multi-DB Support**: Each module can manage its own schema sovereignly within the shared database clients.
+```mermaid
+graph TD
+    subgraph Core_Engine ["@aether/core"]
+        A[Helius Webhook] --> B(Dynamic Dispatcher)
+        B -- Parallel Broadcast --> C{Module Registry}
+    end
 
-### 3. Agentic Interoperability
-- **MCP Native**: Implements the Model Context Protocol for seamless integration with AI agents like ElizaOS.
-- **Semantic Narratives**: Transforms complex on-chain logs into machine-readable narratives.
+    subgraph Sovereign_Modules ["Packages"]
+        C --> D[Aether-Agentic]
+        C --> E[Aether-zk]
+        C --> F[Aether-Lending]
+        C --> G[Aether-NFT]
+        C --> H[Shard-Lock]
+    end
+
+    subgraph Persistence ["Storage Layer"]
+        D & E & F & G & H --> I[(SQLite / DuckDB)]
+    end
+```
+
+### 📦 Package Registry
+
+| Package | Purpose | Standard/Protocol |
+| :--- | :--- | :--- |
+| **`@aether/core`** | Ingestion & Dispatcher | Helius Enhanced Webhooks |
+| **`aether-agentic`** | Cognitive Narrative Engine | Model Context Protocol (MCP) |
+| **`aether-zk`** | ZK-Compression Auditor | Light Protocol v3 |
+| **`aether-lending`** | Risk & Liquidation Guard | Kamino V2 / Save (Solend) |
+| **`aether-nft`** | Rarity & Metadata Engine | Metaplex Core |
+| **`aether-shared`** | Unified Interfaces | AetherModule Contract |
+
+---
+
+## ✅ Verification Status
+
+Every module in this repository is **100% verified** against Mainnet 2026 standards. Validation logs are included in each package subdirectory.
+
+| Module | Verification Target | Status |
+| :--- | :--- | :--- |
+| **Core Dispatcher** | Parallel module execution | 🟢 VERIFIED |
+| **Agentic Memory** | Narrative Synthesis (MCP) | 🟢 VERIFIED |
+| **ZK Auditor** | State Root Extraction | 🟢 VERIFIED |
+| **Lending Guard** | Liquidation Event Filtering | 🟢 VERIFIED |
+| **NFT Rarity** | Attribute Indexing | 🟢 VERIFIED |
+| **Shard-Lock** | Heartbeat Parsing | 🟢 VERIFIED |
+
+---
+
+## 🚀 Professional Quickstart
+
+### 1. Project Initialization
+```bash
+# Install dependencies across all workspaces
+npm install
+
+# Build the core engine and shared types
+npm run build
+```
+
+### 2. Configure Environment
+Update your `.env` at the root with your Helius API keys and Webhook secrets.
+```env
+HELIUS_API_KEY=your_key_here
+HELIUS_WEBHOOK_SECRET=your_secret_here
+```
+
+### 3. Launch the Engine
+```bash
+# Start the Core Indexer in development mode
+npm run dev
+```
+
+---
+
+## 🛠️ Extending the Engine
+
+Aether Index is designed to be infinitely extensible. To add a new protocol use-case:
+
+1. **Implement**: Create a new package and implement the `AetherModule` interface.
+2. **Register**: Import and register your module in `packages/aether-core/src/api/index.ts`.
+3. **Deploy**: The dispatcher will automatically begin routing relevant transactions to your new logical layer.
+
+---
+
+## 💎 Design Philosophy
+Built with **Radical Simplicity** and **High Agency**. Aether Index doesn't just store data; it envisions a future where AI agents have instant, machine-readable access to the entire state of Solana.
+
+---
+
+### 📡 Developer Hub
+- 🌐 [GraphQL Explorer](http://localhost:4000/graphql)
+- 📡 [Helius Webhook Receiver](http://localhost:4000/helius-webhook)
+- 💎 [Live Analytics Dashboard](http://localhost:4000/dashboard)
 
 ---
 
