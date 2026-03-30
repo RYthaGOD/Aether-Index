@@ -63,7 +63,7 @@ Confirmed `backfill.ts` retry logic using the required jittered exponential back
 
 ## ✨ Key Features
 
-| Requirement | Implementation |
+| Capability | Implementation |
 | :--- | :--- |
 | **Dynamic Schema** | `IdlParser` reads any Anchor IDL and generates SQLite + DuckDB tables at startup |
 | **Instruction Decoding** | `BorshInstructionCoder` from `@coral-xyz/anchor` decodes instruction data automatically |

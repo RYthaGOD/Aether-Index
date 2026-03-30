@@ -2,14 +2,14 @@ import { Command } from 'commander';
 import { db } from '../db/client';
 import { UniversalModule } from '../modules/universal';
 // @ts-ignore
-import { Helius } from 'helius-sdk';
+const Helius = require('helius-sdk').Helius || require('helius-sdk').default || require('helius-sdk');
 import { config } from '../config';
 import path from 'path';
 
 /**
  * Backfill Tool: The Time Traveler
  * 
- * Satisfies the "Batch Mode" requirement of the Superteam Bounty.
+ * Satisfies the "Batch Mode" requirement for large-scale data ingestion.
  * Processes transactions within a slot range or for specific signatures.
  * Implements exponential backoff for RPC retries as required.
  */
@@ -18,7 +18,7 @@ const MAX_RETRIES = 5;
 const BASE_DELAY_MS = 500;
 
 /**
- * Exponential Backoff Retry (Bounty Requirement: "exponential backoff for RPC retries")
+ * Exponential Backoff Retry (System standard for RPC resilience)
  */
 async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
     let lastError: any;

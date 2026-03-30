@@ -1,12 +1,12 @@
-# Aether Index - Superteam Ukraine Bounty: X Thread Draft
+# Aether Index - Universal Solana Indexer: Technical Showcase
 
 **Tweet 1: The Hook**
-Just submitted **Aether Index** for the @SuperteamUKR "Middle" level bounty! 🚀🇺🇦 
+Excited to share **Aether Index**! 🚀
 
 Aether is a production-ready, Universal Solana Indexer that automatically adapts to ANY Anchor program. No manual schemas. No custom decoders. Just drop an IDL and go. 🧵👇
 
 **Tweet 2: The Problem**
-Building indexers on Solana usually sucks. You write custom database schemas, wrestling with Borsh decoders, and hardcode everything for a single protocol. When the protocol updates its IDL, your indexer breaks. We fixed that.
+Building indexers on Solana usually sucks. You write custom database schemas, wrestle with Borsh decoders, and hardcode everything for a single protocol. When the protocol updates its IDL, your indexer breaks. We fixed that.
 
 **Tweet 3: Dynamic IDL Parsing -> Universal Indexing**
 Aether features a fully dynamic `IdlParser`. 
@@ -35,4 +35,4 @@ Most indexers are monolithic and fragile. Aether is modular by design. The Unive
 **Tweet 8: Try It Out!**
 Aether Index is open-source and ready for production. Clone it, drop your Anchor IDL, and hit `docker-compose up`. 
 Check out the repo here: [Insert GitHub Link] 
-Thanks to @SuperteamUKR for the bounty opportunity! Let's build. 🏗️🔥 #Solana #SuperteamUkraine
+Let's build. 🏗️🔥 #Solana #AetherIndex #Web3Infrastructure

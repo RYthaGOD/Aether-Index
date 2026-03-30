@@ -8,7 +8,7 @@ import path from 'path';
  * UniversalModule: The Shape-Shifter
  * 
  * Dynamically indexes any program based on its Anchor IDL.
- * Satisfies the "Universal Indexer" and "Dynamic Schema" bounty requirements.
+ * Facilitates "Universal Indexing" and "Dynamic Schema" capabilities.
  */
 export class UniversalModule implements AetherModule {
     public id: string;
@@ -153,7 +153,7 @@ export class UniversalModule implements AetherModule {
             }
         });
 
-        // 2. Aggregation Endpoint (Bounty: "call counts for specific instructions over a period")
+        // 2. Aggregation Endpoint (Support for: "call counts for specific instructions over a period")
         app.get(`/api/v1/stats/${idlName}/summary`, async (req: any, res: any) => {
             const { db } = require('../db/client');
             try {

@@ -4,7 +4,7 @@ import { Idl } from '@coral-xyz/anchor';
  * IdlParser: The Architect of Dynamic Schemas
  * 
  * Responsible for translating Anchor IDLs into optimized SQLite and DuckDB schemas.
- * This is the core "Universal" engine component required by the Superteam Bounty.
+ * This is the core "Universal" engine component.
  */
 export class IdlParser {
     /**

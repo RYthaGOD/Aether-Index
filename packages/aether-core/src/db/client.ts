@@ -152,7 +152,7 @@ class DBClient {
     }
 
     /**
-     * Dynamic Schema Guard: Core Bounty Requirement
+     * Dynamic Schema Guard: Core Technical Standard
      * Ensures a table exists in both Registry (SQLite) and Analytics (DuckDB).
      */
     async ensureDynamicTable(tableName: string, columnDefs: string[]) {
