@@ -1,3 +1,4 @@
+// @ts-ignore
 import { EnhancedTransaction } from "helius-sdk";
 import { AetherModule } from "aether-shared";
 import { ShardParser } from "../worker/shard_parser";

@@ -4,6 +4,9 @@
   "private": true,
   "description": "Shared interfaces and types for Aether Index",
   "main": "index.ts",
+  "scripts": {
+    "build": "tsc"
+  },
   "peerDependencies": {
     "helius-sdk": "^2.2.2"
   }

@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { config } from '../config';
+import fs from 'fs';
+import path from 'path';
 
 export class WebhookManager {
     private static HELIUS_API_URL = 'https://api.helius.xyz/v0/webhooks';
@@ -27,7 +29,8 @@ export class WebhookManager {
                     'KLend2g3cP87fffoy8q1mQqGKjrxjC8boSyAYavgmjD', // Kamino KLend V2
                     'So1endDq2YkqhipRh3WViPa8hdiSpxWy6z3Z6tMCpAo', // Save (Solend)
                     'CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d', // Metaplex Core
-                    'SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7'  // Light System (ZK)
+                    'SySTEM1eSU2p4BGQfQpimFEWWSC1XDFeun3Nqzz3rT7', // Light System (ZK)
+                    ...this.discoverUniversalProgramIds()  // Dynamic IDLs
                 ],
                 webhookType: "enhanced"
             };
@@ -44,5 +47,19 @@ export class WebhookManager {
         } catch (err: any) {
             console.error('[WebhookManager] Orchestration failed:', err.response?.data || err.message);
         }
+    }
+
+    /**
+     * Discovers program IDs from IDL files in data/idls/
+     * Used to auto-subscribe the Helius webhook to all indexed programs.
+     */
+    private static discoverUniversalProgramIds(): string[] {
+        const idlDir = path.resolve(process.cwd(), 'data/idls');
+        if (!fs.existsSync(idlDir)) return [];
+        
+        return fs.readdirSync(idlDir)
+            .filter(f => f.endsWith('.json'))
+            .map(f => f.replace('.json', ''))
+            .filter(id => id.length >= 32);
     }
 }

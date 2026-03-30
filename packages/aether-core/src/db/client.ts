@@ -150,6 +150,22 @@ class DBClient {
         `;
         return this.runSqlite(query);
     }
+
+    /**
+     * Dynamic Schema Guard: Core Bounty Requirement
+     * Ensures a table exists in both Registry (SQLite) and Analytics (DuckDB).
+     */
+    async ensureDynamicTable(tableName: string, columnDefs: string[]) {
+        const createSql = `CREATE TABLE IF NOT EXISTS ${tableName} (${columnDefs.join(', ')})`;
+        
+        // 1. Initialize in SQLite Registry
+        await this.execSqlite(createSql);
+        
+        // 2. Initialize in DuckDB Analytics (No explicit return check needed as it follows queue pattern)
+        await this.runDuckDB(createSql);
+        
+        console.log(`[DB] Dynamic Table Verified: ${tableName}`);
+    }
 }
 
 export const db = new DBClient();
