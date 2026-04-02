@@ -3,8 +3,9 @@ import { Database } from 'duckdb';
 import { config } from '../config';
 import fs from 'fs';
 import path from 'path';
+import { DatabaseClient } from 'aether-shared';
 
-class DBClient {
+class DBClient implements DatabaseClient {
     private sqlite: sqlite3.Database;
     private duckdb: Database;
     private duckdbCon: any;
@@ -82,7 +83,10 @@ class DBClient {
 
             await new Promise<void>((resolve) => {
                 this.duckdbCon.run(item.sql, item.params, (err: any) => {
-                    if (err) console.error('[DuckDB] Async Write Error:', err.message);
+                    if (err) {
+                        console.error('[DuckDB] Async Write Error:', err.message);
+                        console.error('[DuckDB] Faulty Query:', item.sql);
+                    }
                     resolve();
                 });
             });
@@ -149,6 +153,15 @@ class DBClient {
             WHERE last_heartbeat < datetime('now', '-10 minutes') AND status = 'ONLINE'
         `;
         return this.runSqlite(query);
+    }
+
+    async getLatestSlot(tableName: string): Promise<number> {
+        try {
+            const rows = await this.querySqlite(`SELECT MAX(slot) as last_slot FROM ${tableName}`);
+            return rows[0]?.last_slot || 0;
+        } catch (e) {
+            return 0;
+        }
     }
 
     /**

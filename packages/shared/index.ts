@@ -1,4 +1,16 @@
 // Aether Shared Types
+export type EnrichedTransaction = any; // Placeholder for Helius/Solana enhanced tx structure
+export interface DatabaseClient {
+  init(): Promise<void>;
+  querySqlite(sql: string, params?: any[]): Promise<any[]>;
+  runSqlite(sql: string, params?: any[]): Promise<void>;
+  execSqlite(sql: string): Promise<void>;
+  runDuckDB(sql: string, params?: any[]): Promise<void>;
+  ensureDynamicTable(tableName: string, columnDefs: string[]): Promise<void>;
+  insertShardLock(shard: any): Promise<void>;
+  getShardLocations(merkleRoot: string): Promise<any[]>;
+  runShardMaintenance(): Promise<void>;
+}
 
 /**
  * AetherModule Interface
@@ -27,14 +39,14 @@ export interface AetherModule {
    * Initialize module-specific state, register database tables, and verify configurations.
    * @param db The shared Aether Database Client
    */
-  initialize(db: any): Promise<void>;
+  initialize(db: DatabaseClient): Promise<void>;
 
   /**
    * Process a transaction broadcasted by the Aether Core.
    * @param tx The Helius Enhanced Transaction object (EnrichedTransaction)
    * @param db The shared Aether Database Client for persistence
    */
-  processTransaction(tx: any, db: any): Promise<void>;
+  processTransaction(tx: EnrichedTransaction, db: DatabaseClient): Promise<void>;
 
   /**
    * Optional cleanup logic performed when the engine shuts down.

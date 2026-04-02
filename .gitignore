@@ -34,3 +34,6 @@ yarn-error.log*
 .idea/
 .DS_Store
 Thumbs.db
+
+# Documentation / Social
+X_THREAD.md

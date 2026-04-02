@@ -65,7 +65,9 @@ export class IdlParser {
                 case 'u64':
                 case 'i64':
                 case 'f64':
-                    return 'REAL'; // SQLite/DuckDB handle big ints as REAL or double better in generic queries
+                case 'u128':
+                case 'i128':
+                    return 'TEXT'; // Move to TEXT for bit-perfect precision (Solana/Anchor standard)
                 case 'u32':
                 case 'i32':
                 case 'u16':

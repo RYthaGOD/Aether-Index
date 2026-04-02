@@ -19,17 +19,22 @@ export class GuardWorker {
         this.isRunning = true;
         console.log('🛡️ Socket Guardian Standing Watch...');
 
-        // Initial baseline from DB
+        // Initial baseline: Find the highest slot currently in the DB
+        // We check the system_metadata first, then fallback to 0
         const result = await db.querySqlite("SELECT value FROM system_metadata WHERE key = 'last_processed_slot'");
         this.lastIndexedSlot = parseInt(result[0]?.value || '0');
 
-        setInterval(() => this.performAudit(), 60 * 1000); // Audit every minute
+        console.log(`[Guardian] Baseline Sync: Starting from slot ${this.lastIndexedSlot}`);
+
+        // Audit every 30 seconds for tighter oversight
+        setInterval(() => this.performAudit(), 30 * 1000);
     }
 
     private static async performAudit() {
         try {
             const currentSlot = await this.connection.getSlot();
             
+            // If we've never indexed, we start from now
             if (this.lastIndexedSlot === 0) {
                 this.lastIndexedSlot = currentSlot;
                 return;
@@ -37,12 +42,20 @@ export class GuardWorker {
 
             const gap = currentSlot - this.lastIndexedSlot;
 
-            if (gap > 50) { // Threshold for a "concerning" gap
-                console.warn(`⚠️ [Guardian] Potential Slot Gap Detected! (Current: ${currentSlot} | Last: ${this.lastIndexedSlot} | Gap: ${gap})`);
-                // In a production environment, this would trigger a getSignaturesForAddress range repair.
+            if (gap > 100) { // Increased threshold slightly for network jitter
+                console.warn(`[AUDIT] ⚠️ Gap Detected: ${gap} slots. (Latest: ${currentSlot}, DB: ${this.lastIndexedSlot})`);
+                console.warn(`[AUDIT] Recommendation: Run backfill to recover potential missed transactions.`);
+            } else if (gap > 0) {
+                // We're slightly behind but likely catching up via webhooks
             }
 
-            this.lastIndexedSlot = currentSlot;
+            // Update baseline periodically if we are moving forward
+            // (Webhooks should be updating system_metadata, but we use this as a local cache)
+            const result = await db.querySqlite("SELECT value FROM system_metadata WHERE key = 'last_processed_slot'");
+            const dbSlot = parseInt(result[0]?.value || '0');
+            if (dbSlot > this.lastIndexedSlot) {
+                this.lastIndexedSlot = dbSlot;
+            }
         } catch (err: any) {
             console.error('[Guardian] Audit Cycle Failed:', err.message);
         }

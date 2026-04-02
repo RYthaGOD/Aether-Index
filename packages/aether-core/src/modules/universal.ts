@@ -47,7 +47,7 @@ export class UniversalModule implements AetherModule {
             
             // Map instruction names to table names for faster lookup during processing
             if (tableName.startsWith('ix_')) {
-                const ixName = tableName.replace('ix_', '');
+                const ixName = tableName.replace('ix_', '').toLowerCase();
                 this.tableMap[ixName] = tableName;
             }
         }
@@ -77,11 +77,9 @@ export class UniversalModule implements AetherModule {
                     signer: tx.feePayer || 'Unknown'
                 };
 
-                // Extract arguments from decoded data
-                for (const [key, value] of Object.entries(decoded.data)) {
-                    // Primitive conversion for storage
-                    data[key] = typeof value === 'object' ? JSON.stringify(value) : value;
-                }
+                // Extract arguments from decoded data with recursive sanitization
+                const sanitizedData = this.sanitizeData(decoded.data);
+                Object.assign(data, sanitizedData);
 
                 const columns = Object.keys(data);
                 const values = Object.values(data);
@@ -90,16 +88,47 @@ export class UniversalModule implements AetherModule {
                 const sql = `INSERT OR IGNORE INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
                 
                 // Write to both Registry (SQLite) and Analytics (DuckDB)
-                await db.runSqlite(sql, values);
-                await db.runDuckDB(sql, values);
+                try {
+                    await db.runSqlite(sql, values);
+                    await db.runDuckDB(sql, values);
+                } catch (dbErr: any) {
+                    console.error(`[Universal] Database write failure for ${decoded.name}: ${dbErr.message}`);
+                }
 
                 const idlName = (this.idl as any).name || 'Unknown';
-                console.log(`[Universal] Indexed ${decoded.name} for ${idlName}`);
-            } catch (err) {
-                // Silently skip if decoding fails (might be a different instruction version or malformed data)
-                // In production, we'd log this specifically for debugging
+                console.log(`[Universal] Indexed ${decoded.name} for ${idlName} [Slot: ${tx.slot}]`);
+            } catch (err: any) {
+                console.error(`[Universal] Decoding/Processing error in ${this.name}: ${err.message}`);
             }
         }
+    }
+
+    /**
+     * Precision Guard: Recursively converts Anchor BN objects or deep objects to strings
+     */
+    private sanitizeData(obj: any): any {
+        if (obj === null || obj === undefined) return obj;
+        
+        // Handle BN (BigNumber) objects specifically
+        if (typeof obj === 'object' && obj.toString && (obj._isBN || obj.constructor.name === 'BN')) {
+            return obj.toString();
+        }
+
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.sanitizeData(item));
+        }
+
+        if (typeof obj === 'object' && !(obj instanceof Date)) {
+            const sanitized: any = {};
+            for (const [key, value] of Object.entries(obj)) {
+                sanitized[key] = this.sanitizeData(value);
+            }
+            // For root level or depth 1, we might keep it as object for the column mapping
+            // But if it's being returned to ix data, we stringify if it's still an object
+            return sanitized;
+        }
+
+        return obj;
     }
 
     extendServer(app: any): void {

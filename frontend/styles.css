@@ -1,0 +1,337 @@
+/* =========================================================================
+   AETHER INDEX: 2026 Industrial Futurism Stylesheet
+   Theme: Cyberpunk CCTV / Tech-Brutalism
+   ========================================================================= */
+
+:root {
+    --bg-base: #0a0a0c;
+    --bg-glass: rgba(18, 18, 22, 0.7);
+    --border-color: #33333d;
+    --accent-cyan: #00f3ff;
+    --accent-yellow: #ffea00;
+    --accent-red: #ff2a2a;
+    --text-main: #e0e0e5;
+    --text-muted: #888899;
+    --font-heading: 'Outfit', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-base);
+    color: var(--text-main);
+    font-family: var(--font-heading);
+    overflow: hidden; /* App-like feel */
+}
+
+/* Base CRT/Scanline effect to sell the "Terminal" vibe */
+.crt-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background-size: 100% 2px, 3px 100%;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.15;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 80px 1fr;
+    height: 100vh;
+    padding: 1rem;
+    gap: 1rem;
+}
+
+/* Glassmorphism Panels */
+.neon-border {
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+    border-radius: 4px;
+}
+
+/* ==================================
+   HEADER
+   ================================== */
+.header {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.brand-logo {
+    height: 48px;
+    filter: drop-shadow(0 0 8px rgba(0, 243, 255, 0.4));
+}
+
+.brand-text h1 {
+    font-weight: 800;
+    letter-spacing: 2px;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+    color: #fff;
+}
+
+.sub-text {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.status-indicator {
+    font-weight: bold;
+}
+.status-indicator.online {
+    color: var(--accent-cyan);
+    animation: pulse 2s infinite;
+}
+
+.time-panel {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-mono);
+    font-size: 1.25rem;
+    color: var(--accent-yellow);
+}
+
+.sys-pulse {
+    width: 12px;
+    height: 12px;
+    background-color: var(--accent-red);
+    border-radius: 50%;
+    animation: flash 1s infinite alternate;
+}
+
+/* ==================================
+   SIDEBAR
+   ================================== */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1rem;
+}
+
+.nav-title {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    letter-spacing: 1px;
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-links li {
+    padding: 1rem;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    border: 1px solid transparent;
+    transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    color: var(--text-muted);
+}
+
+.nav-links li:hover {
+    border-left: 3px solid var(--accent-cyan);
+    background: rgba(0, 243, 255, 0.05);
+    color: #fff;
+    transform: translateX(4px);
+}
+
+.nav-links li.active {
+    border-left: 4px solid var(--accent-yellow);
+    background: rgba(255, 234, 0, 0.08);
+    color: var(--accent-yellow);
+    font-weight: bold;
+}
+
+.system-stats {
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    border-top: 1px dashed var(--border-color);
+    padding-top: 1rem;
+}
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+.cyan-text { color: var(--accent-cyan); }
+.yellow-text { color: var(--accent-yellow); }
+
+/* ==================================
+   VIEWPORT & PANELS
+   ================================== */
+.viewport {
+    position: relative;
+    overflow: hidden;
+}
+
+.panel {
+    display: none;
+    height: 100%;
+    flex-direction: column;
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 2rem;
+    animation: scanReveal 0.4s ease-out forwards;
+}
+
+.panel.active {
+    display: flex;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.panel-header h2 {
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+.badge {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 2px;
+    font-weight: bold;
+}
+.yellow-badge { background: rgba(255, 234, 0, 0.1); color: var(--accent-yellow); border: 1px solid var(--accent-yellow); }
+.cyan-badge { background: rgba(0, 243, 255, 0.1); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+.red-badge { background: rgba(255, 42, 42, 0.1); color: var(--accent-red); border: 1px solid var(--accent-red); }
+
+/* ==================================
+   DATA TABLES (Industrial Structural)
+   ================================== */
+.table-wrapper {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Custom Scrollbar */
+.table-wrapper::-webkit-scrollbar { width: 6px; }
+.table-wrapper::-webkit-scrollbar-track { background: var(--bg-base); }
+.table-wrapper::-webkit-scrollbar-thumb { background: var(--border-color); }
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    text-align: left;
+}
+
+.data-table th {
+    color: var(--text-muted);
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: var(--bg-base);
+    z-index: 10;
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    color: #ccc;
+    transition: background 0.2s, color 0.2s;
+}
+
+.data-table tbody tr:hover td {
+    background: rgba(255,255,255,0.03);
+    color: #fff;
+    cursor: crosshair;
+}
+
+/* Dropdown styling */
+.tech-select {
+    background: rgba(0, 0, 0, 0.5);
+    color: var(--accent-cyan);
+    border: 1px solid var(--border-color);
+    padding: 0.5rem 1rem;
+    font-family: var(--font-mono);
+    outline: none;
+    cursor: pointer;
+    margin-right: 1rem;
+}
+.tech-select:focus { border-color: var(--accent-cyan); }
+
+/* Agentic Feed Styling */
+.feed-wrapper {
+    flex: 1;
+    overflow-y: auto;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.feed-item {
+    border-left: 2px solid var(--border-color);
+    padding-left: 1rem;
+    animation: slideIn 0.3s ease-out;
+}
+.feed-time {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+.feed-text {
+    color: var(--accent-cyan);
+}
+
+/* Animations */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+@keyframes flash {
+    0% { opacity: 0.2; }
+    100% { opacity: 1; filter: drop-shadow(0 0 5px var(--accent-red)); }
+}
+@keyframes scanReveal {
+    from { opacity: 0; clip-path: polygon(0 0, 100% 0, 100% 0, 0 0); transform: translateY(-10px); }
+    to { opacity: 1; clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); transform: translateY(0); }
+}
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(-10px); }
+    to { opacity: 1; transform: translateX(0); }
+}

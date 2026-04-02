@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Index | Telemetry Dashboard</title>
+    <!-- Google Fonts for Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="crt-overlay"></div>
+    <div class="grid-container">
+        
+        <!-- HEADER -->
+        <header class="header neon-border">
+            <div class="logo-container">
+                <img src="assets/logo.png" alt="Aether Logo" class="brand-logo" />
+                <div class="brand-text">
+                    <h1>AETHER INDEX</h1>
+                    <span class="sub-text">v2.4.0 // LIBRARIAN STANDARD // SYNC: <span id="sync-status" class="status-indicator online">ONLINE</span></span>
+                </div>
+            </div>
+            <div class="time-panel">
+                <span id="sys-time">00:00:00.00</span>
+                <div class="sys-pulse"></div>
+            </div>
+        </header>
+
+        <!-- NAVIGATION / CCTV CONTROLS -->
+        <nav class="sidebar neon-border">
+            <div class="nav-title">MODULE_SELECT_</div>
+            <ul class="nav-links">
+                <li class="active" data-target="universal">Universal [CORE]</li>
+                <li data-target="agentic">Agentic [MEMORY]</li>
+                <li data-target="lending">Lending [GUARD]</li>
+                <li data-target="zk">ZK Proofs [AUDIT]</li>
+            </ul>
+            <div class="system-stats">
+                <div class="stat-row"><span>CPU_LOAD</span> <span class="cyan-text">12%</span></div>
+                <div class="stat-row"><span>NET_THRUPUT</span> <span class="yellow-text">8.4GB/s</span></div>
+            </div>
+        </nav>
+
+        <!-- MAIN VIEWPORT -->
+        <main class="viewport">
+            
+            <!-- PANEL: UNIVERSAL -->
+            <section id="panel-universal" class="panel active">
+                <div class="panel-header">
+                    <h2>UNIVERSAL_STREAM</h2>
+                    <span class="badge yellow-badge">REAL-TIME</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>SIGNATURE</th>
+                                <th>INSTRUCTION</th>
+                                <th>SLOT</th>
+                            </tr>
+                        </thead>
+                        <tbody id="universal-data">
+                            <!-- Data populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PANEL: AGENTIC -->
+            <section id="panel-agentic" class="panel">
+                <div class="panel-header">
+                    <h2>SEMANTIC_NARRATIVES</h2>
+                    <span class="badge cyan-badge">COGNITIVE_LAYER</span>
+                </div>
+                <div class="feed-wrapper" id="agentic-data">
+                    <!-- Data populated by JS -->
+                </div>
+            </section>
+
+            <!-- PANEL: LENDING -->
+            <section id="panel-lending" class="panel">
+                <div class="panel-header">
+                    <h2>LIQUIDATION_RADAR</h2>
+                    <span class="badge red-badge">HIGH_PRIORITY</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>SIGNATURE</th>
+                                <th>PROTOCOL</th>
+                                <th>REPAID_AMOUNT (TEXT)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lending-data">
+                            <!-- Data populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- PANEL: ZK -->
+            <section id="panel-zk" class="panel">
+                <div class="panel-header">
+                    <h2>ZERO_KNOWLEDGE_LOGS</h2>
+                    <span class="badge cyan-badge">VERIFIED</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>SIGNATURE</th>
+                                <th>STATE_ROOT</th>
+                                <th>STATUS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="zk-data">
+                            <!-- Data populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

@@ -11,16 +11,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
+# Copy source so workspaces are detected
+COPY . .
+
+# Install all dependencies including workspaces
 RUN npm install
 
-# Copy source and build
-COPY . .
+# Build
 RUN npm run build
-RUN if [ -d "dist/src" ]; then cp -R dist/src/* dist/ && rm -rf dist/src; fi
-RUN mkdir -p dist/api/static && cp -R src/api/static/. dist/api/static/
-RUN cp src/db/*.sql dist/db/
+RUN mkdir -p packages/aether-core/dist/db && cp packages/aether-core/src/db/*.sql packages/aether-core/dist/db/
 
 # Create persistent data volumes
 RUN mkdir -p /app/data/parquet /app/data/sqlite

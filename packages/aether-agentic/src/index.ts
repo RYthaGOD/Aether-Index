@@ -1,4 +1,4 @@
-import { AetherModule } from 'aether-shared';
+import { AetherModule, DatabaseClient } from 'aether-shared';
 
 /**
  * Aether-Agentic Module
@@ -11,39 +11,43 @@ export class AgenticModule implements AetherModule {
   public name = "Aether Agentic Memory";
   public description = "Transforms on-chain events into semantic narratives for AI agents.";
 
-  async initialize(db: any): Promise<void> {
+  async initialize(db: DatabaseClient): Promise<void> {
     console.log("[Agentic] Registering Semantic Memory tables...");
-    await db.execSqlite(`
+    const schema = `
       CREATE TABLE IF NOT EXISTS agent_narratives (
         signature TEXT PRIMARY KEY,
         narrative TEXT NOT NULL,
         semantic_cluster TEXT,
         timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
       )
-    `);
+    `;
+    await db.execSqlite(schema);
+    await db.runDuckDB(schema);
     console.log("[Agentic] Initialized.");
   }
 
-  async processTransaction(tx: any, db: any): Promise<void> {
-    // 1. Narrative Generation (Sub-second logic)
-    const narrative = this.generateNarrative(tx);
-    
-    if (narrative) {
-      console.log(`[Agentic] New Narrative Generated: ${tx.signature.slice(0,8)}...`);
+  async processTransaction(tx: any, db: DatabaseClient): Promise<void> {
+    try {
+      // 1. Narrative Generation (Sub-second logic)
+      const narrative = this.generateNarrative(tx);
       
-      // 2. Persist to Cognitive Layer
-      await db.runSqlite(
-        "INSERT OR IGNORE INTO agent_narratives (signature, narrative) VALUES (?, ?)",
-        [tx.signature, narrative]
-      );
+      if (narrative) {
+        console.log(`[Agentic] New Narrative Generated: ${tx.signature.slice(0,8)}...`);
+        
+        // 2. Persist to Cognitive Layer (Dual-write)
+        const sql = "INSERT OR IGNORE INTO agent_narratives (signature, narrative) VALUES (?, ?)";
+        const params = [tx.signature, narrative];
+
+        await db.runSqlite(sql, params);
+        await db.runDuckDB(sql, params);
+      }
+    } catch (err: any) {
+      console.error(`[Agentic] Processing Error: ${err.message}`);
     }
   }
 
   private generateNarrative(tx: any): string | null {
-    // 2026-style semantic reconstruction
     if (!tx.description) return null;
-    
-    // Simple reconstruction for now; in production this uses a vector embedding suite
     return `Transaction ${tx.signature.slice(0, 8)}: ${tx.description} at slot ${tx.slot}`;
   }
 
@@ -53,8 +57,16 @@ export class AgenticModule implements AetherModule {
     app.get('/api/agentic/narratives', async (req: any, res: any) => {
         const { db } = require('../../aether-core/src/db/client');
         try {
-          const rows = await db.querySqlite("SELECT * FROM agent_narratives ORDER BY timestamp DESC LIMIT 100");
-          res.json(rows);
+          const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
+          const offset = parseInt(req.query.offset) || 0;
+          
+          const rows = await db.querySqlite("SELECT * FROM agent_narratives ORDER BY timestamp DESC LIMIT ? OFFSET ?", [limit, offset]);
+          res.json({
+            count: rows.length,
+            limit,
+            offset,
+            data: rows
+          });
         } catch (err) {
           res.status(500).json({ error: "Failed to fetch narratives" });
         }

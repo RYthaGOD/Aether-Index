@@ -12,7 +12,14 @@ export class WebhookReceiver {
     /**
      * Registers and initializes a new module with the Aether Core.
      */
+    /**
+     * Registers and initializes a new module with the Aether Core.
+     */
     static async registerModule(module: AetherModule, app?: any) {
+        if (this.modules.find(m => m.id === module.id)) {
+            return; // Idempotency check 
+        }
+
         console.log(`[Aether] Loading Module: ${module.name} (${module.id})`);
         try {
             await module.initialize(db);
@@ -100,7 +107,7 @@ export class WebhookReceiver {
 
         if (maxSlot > 0) {
             await db.runSqlite(
-                "UPDATE system_metadata SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = 'last_processed_slot'",
+                "INSERT OR REPLACE INTO system_metadata (key, value, updated_at) VALUES ('last_processed_slot', ?, CURRENT_TIMESTAMP)",
                 [maxSlot.toString()]
             ).catch(e => console.error('[Aether] Failed to update HWM slot:', e.message));
         }

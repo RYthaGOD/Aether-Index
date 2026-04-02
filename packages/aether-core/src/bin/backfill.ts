@@ -5,6 +5,7 @@ import { UniversalModule } from '../modules/universal';
 const Helius = require('helius-sdk').Helius || require('helius-sdk').default || require('helius-sdk');
 import { config } from '../config';
 import path from 'path';
+import pLimit from 'p-limit';
 
 /**
  * Backfill Tool: The Time Traveler
@@ -45,6 +46,7 @@ program
     .option('-s, --start-slot <number>', 'Starting slot', '0')
     .option('-e, --end-slot <number>', 'Ending slot', 'latest')
     .option('-b, --batch-size <number>', 'Signatures per batch', '100')
+    .option('-c, --concurrency <number>', 'RPC concurrency limit', '5')
     .action(async (options) => {
         console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
         console.log(`  [Backfill] Batch Process Starting`);
@@ -70,29 +72,35 @@ program
                 'getSignaturesForAddress'
             );
             
-            console.log(`[Backfill] Found ${signatures.length} transactions. Processing...\n`);
+            console.log(`[Backfill] Found ${signatures.length} transactions. Processing with concurrency ${options.concurrency}...\n`);
 
-            for (const sigInfo of signatures) {
-                try {
-                    const tx = await withRetry(
-                        () => helius.rpc.getTransaction(sigInfo.signature),
-                        `getTransaction(${sigInfo.signature.slice(0, 8)}...)`
-                    );
-                    
-                    if (tx) {
-                        await module.processTransaction(tx as any, db);
-                        processed++;
+            const limit = pLimit(parseInt(options.concurrency));
+            const tasks = signatures.map((sigInfo) => 
+                limit(async () => {
+                    try {
+                        const tx = await withRetry(
+                            () => helius.rpc.getTransaction(sigInfo.signature),
+                            `getTransaction(${sigInfo.signature.slice(0, 8)}...)`
+                        );
+                        
+                        if (tx) {
+                            await module.processTransaction(tx as any, db);
+                            processed++;
+                        }
+                    } catch (err: any) {
+                        failed++;
+                        console.error(`[Backfill] Permanently failed tx ${sigInfo.signature.slice(0, 8)}: ${err.message}`);
                     }
-                } catch (err: any) {
-                    failed++;
-                    console.error(`[Backfill] Permanently failed tx ${sigInfo.signature.slice(0, 8)}: ${err.message}`);
-                }
 
-                // Progress log every 50 txs
-                if ((processed + failed) % 50 === 0) {
-                    console.log(`[Backfill] Progress: ${processed} indexed, ${failed} failed, ${signatures.length - processed - failed} remaining`);
-                }
-            }
+                    // Progress log every 50 txs
+                    if ((processed + failed) % 50 === 0) {
+                        const progress = ((processed + failed) / signatures.length * 100).toFixed(1);
+                        console.log(`[Backfill] Progress: ${progress}% (${processed} indexed, ${failed} failed, ${signatures.length - processed - failed} remaining)`);
+                    }
+                })
+            );
+
+            await Promise.all(tasks);
             
             console.log(`\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`);
             console.log(`  [Backfill] Batch Complete`);

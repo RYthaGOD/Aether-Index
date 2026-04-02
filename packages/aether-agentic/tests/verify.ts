@@ -15,8 +15,11 @@ async function verifyAgentic() {
     runSqlite: async (sql: string, params: any[]) => {
       console.log(`[Mock DB] Run: ${sql}`);
       console.log(`[Mock DB] Params: ${JSON.stringify(params)}`);
+    },
+    runDuckDB: async (sql: string, params: any[]) => {
+      console.log(`[Mock DB] Analytics (DuckDB): ${sql.slice(0, 50)}...`);
     }
-  };
+  } as any;
 
   await module.initialize(mockDb);
 

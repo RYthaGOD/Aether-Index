@@ -51,6 +51,21 @@ async function startServer() {
     const app = express();
     app.use(cors());
     app.use(express.json());
+
+    // Serve Frontend Statically (Deployment Ready for Railway)
+    // __dirname in production is /app/packages/aether-core/dist/api
+    const frontendPath = path.resolve(__dirname, '../../../../frontend');
+    app.use(express.static(frontendPath));
+
+    // API Healthcheck
+    app.get('/api/health', (_req, res) => {
+        res.json({
+            status: 'ONLINE',
+            service: 'Aether Librarian',
+            uptime: Math.round(process.uptime()),
+            timestamp: new Date().toISOString()
+        });
+    });
     
     const httpServer = createServer(app);
     const schema = makeExecutableSchema({ typeDefs, resolvers });
@@ -80,26 +95,35 @@ async function startServer() {
             await WebhookReceiver.registerModule(new LendingModule(), app);
             await WebhookReceiver.registerModule(new NftModule(), app);
 
-            // Dynamic Universal Indexing: Drop IDLs into /data/idls to auto-register
+            // ================================================
             const idlDir = path.resolve(process.cwd(), 'data/idls');
-            if (fs.existsSync(idlDir)) {
+            const syncUniversalModules = async () => {
+                if (!fs.existsSync(idlDir)) return;
                 const idlFiles = fs.readdirSync(idlDir).filter(f => f.endsWith('.json'));
                 for (const file of idlFiles) {
                     try {
                         const idlPath = path.join(idlDir, file);
                         const idl = JSON.parse(fs.readFileSync(idlPath, 'utf8'));
-                        // For the demo, we assume programId is in metadata or provided by filename
-                        // Format: [programId].json
                         const programId = file.replace('.json', '');
                         if (programId.length >= 32) {
-                            console.log(`[Librarian] Auto-Registering Universal Module: ${idl.name} (${programId})`);
                             await WebhookReceiver.registerModule(new UniversalModule(programId, idlPath), app);
                         }
                     } catch (e) {
                         console.error(`[Librarian] Failed to load IDL ${file}:`, e);
                     }
                 }
-            }
+            };
+
+            await syncUniversalModules();
+
+            // Hot-Hook Watcher: Re-syncing IDLs and Webhooks on the fly
+            fs.watch(idlDir, async (event, filename) => {
+                if (filename && filename.endsWith('.json')) {
+                    console.log(`[Librarian] Hot-Hook Change Detected: ${filename}`);
+                    await syncUniversalModules();
+                    await WebhookManager.orchestrate().catch(e => console.error('[Librarian] Hot-Hook Webhook Sync Warning:', e.message));
+                }
+            });
             // ================================================
 
             WebhookReceiver.setup(app as any);
