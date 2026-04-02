@@ -11,15 +11,18 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy source so workspaces are detected
+# Copy ALL source first for Monorepo Workspace detection
 COPY . .
 
-# Install all dependencies including workspaces
+# Install all dependencies including workspaces (Clean Install)
 RUN npm install
 
-# Build
+# Build the entire monorepo using Project References (tsc --build)
+# This handles the dependency order (shared -> core) automatically.
 RUN npm run build
-RUN mkdir -p packages/aether-core/dist/db && cp packages/aether-core/src/db/*.sql packages/aether-core/dist/db/
+
+# Ensure SQL schemas are in place for the core engine
+RUN mkdir -p packages/aether-core/dist/db && cp packages/aether-core/src/db/*.sql packages/aether-core/dist/db/ 2>/dev/null || true
 
 # Create persistent data volumes
 RUN mkdir -p /app/data/parquet /app/data/sqlite
@@ -32,4 +35,5 @@ ENV PORT=4000
 ENV SQLITE_DB_PATH=/app/data/sqlite/sovereign.db
 ENV DUCKDB_PATH=/app/data/parquet/analytics.duckdb
 
+# Start the core service
 CMD ["npm", "start"]

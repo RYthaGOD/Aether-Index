@@ -14,6 +14,15 @@
       "@aether/sdk": ["packages/aether-sdk/src/index.ts"]
     }
   },
+  "references": [
+    { "path": "packages/shared" },
+    { "path": "packages/aether-core" },
+    { "path": "packages/aether-sdk" },
+    { "path": "packages/aether-agentic" },
+    { "path": "packages/aether-zk" },
+    { "path": "packages/aether-lending" },
+    { "path": "packages/aether-nft" }
+  ],
   "include": ["packages/**/*"],
   "exclude": ["node_modules", "**/dist"]
 }

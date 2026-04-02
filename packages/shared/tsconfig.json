@@ -9,7 +9,8 @@
     "strict": false,
     "baseUrl": ".",
     "outDir": "./dist",
-    "declaration": true
+    "declaration": true,
+    "composite": true
   },
   "include": ["index.ts"],
   "exclude": ["node_modules", "dist"]

@@ -4,10 +4,16 @@
   "private": true,
   "description": "High-Performance Modular Solana Indexing Engine",
   "workspaces": [
-    "packages/*"
+    "packages/aether-core",
+    "packages/aether-sdk",
+    "packages/aether-agentic",
+    "packages/aether-zk",
+    "packages/aether-lending",
+    "packages/aether-nft",
+    "packages/shared"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "tsc --build",
     "dev": "npm run dev --workspace=@aether/core",
     "create-module": "ts-node packages/aether-core/src/bin/aether-cli.ts create-module",
     "simulate": "ts-node packages/aether-core/src/bin/simulate.ts",

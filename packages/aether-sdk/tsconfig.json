@@ -3,8 +3,12 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
+    "composite": true,
     "declaration": true
   },
+  "references": [
+    { "path": "../shared" }
+  ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
