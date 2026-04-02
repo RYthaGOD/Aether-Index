@@ -53,8 +53,7 @@ async function startServer() {
     app.use(express.json());
 
     // Serve Frontend Statically (Deployment Ready for Railway)
-    // __dirname in production is /app/packages/aether-core/dist/api
-    const frontendPath = path.resolve(__dirname, '../../../../frontend');
+    const frontendPath = path.resolve(process.cwd(), 'frontend');
     app.use(express.static(frontendPath));
 
     // API Healthcheck
@@ -66,13 +65,13 @@ async function startServer() {
             timestamp: new Date().toISOString()
         });
     });
-    
+
     const httpServer = createServer(app);
     const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-    const server = new ApolloServer({ 
+    const server = new ApolloServer({
         schema,
-        introspection: true, 
+        introspection: true,
         context: async () => {
             return {};
         }
@@ -87,7 +86,7 @@ async function startServer() {
 
         try {
             await db.init();
-            
+
             // ================================================
             await WebhookReceiver.registerModule(new ShardLockModule(), app);
             await WebhookReceiver.registerModule(new AgenticModule(), app);
