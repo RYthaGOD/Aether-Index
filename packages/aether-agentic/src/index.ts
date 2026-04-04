@@ -51,11 +51,10 @@ export class AgenticModule implements AetherModule {
     return `Transaction ${tx.signature.slice(0, 8)}: ${tx.description} at slot ${tx.slot}`;
   }
 
-  extendServer(app: any): void {
+  extendServer(app: any, db: DatabaseClient): void {
     console.log("[Agentic] Registering API: /api/agentic/narratives");
 
     app.get('/api/agentic/narratives', async (req: any, res: any) => {
-        const { db } = require('../../aether-core/src/db/client');
         try {
           const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
           const offset = parseInt(req.query.offset) || 0;

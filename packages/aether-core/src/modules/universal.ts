@@ -46,8 +46,8 @@ export class UniversalModule implements AetherModule {
             this.columnWhitelist[tableName] = new Set(colNames);
             
             // Map instruction names to table names for faster lookup during processing
-            if (tableName.startsWith('ix_')) {
-                const ixName = tableName.replace('ix_', '').toLowerCase();
+            if (tableName.includes('ix_')) {
+                const ixName = tableName.replace(/"/g, '').replace('ix_', '').toLowerCase();
                 this.tableMap[ixName] = tableName;
             }
         }
@@ -62,26 +62,43 @@ export class UniversalModule implements AetherModule {
             // Only process instructions for our targeted program
             if (ix.programId !== this.programId) continue;
 
+            const txSig = tx.signature || 'unknown';
+
             try {
                 // Anchor decoding: The secret sauce
-                // Assuming tx.instructions have base58 data strings in standard Solana SDK / Helius format
-                const decoded = this.coder.decode(ix.data, 'base58');
+                let decoded: any;
+                try {
+                    decoded = this.coder.decode(ix.data, 'base58');
+                } catch (decodeErr: any) {
+                    // Precision Error Boundary: Log and continue rather than crashing the stream
+                    console.warn(`[Universal:${this.name}] ⚠️ Decoding failed for tx ${txSig}: ${decodeErr.message}`);
+                    continue;
+                }
+
                 if (!decoded) continue;
 
                 const tableName = this.tableMap[decoded.name.toLowerCase()];
-                if (!tableName) continue;
+                if (!tableName) {
+                    console.log(`[Universal:${this.name}] ℹ️ Skipping unmapped instruction: ${decoded.name}`);
+                    continue;
+                }
 
                 const data: any = {
-                    signature: tx.signature,
+                    signature: txSig,
                     slot: tx.slot,
                     signer: tx.feePayer || 'Unknown'
                 };
 
                 // Extract arguments from decoded data with recursive sanitization
-                const sanitizedData = this.sanitizeData(decoded.data);
-                Object.assign(data, sanitizedData);
+                try {
+                    const sanitizedData = this.sanitizeData(decoded.data);
+                    Object.assign(data, sanitizedData);
+                } catch (sanitizeErr: any) {
+                    console.error(`[Universal:${this.name}] 🚨 Sanitization failure for ${decoded.name} [${txSig}]: ${sanitizeErr.message}`);
+                    continue;
+                }
 
-                const columns = Object.keys(data);
+                const columns = Object.keys(data).map(c => `"${c}"`);
                 const values = Object.values(data);
                 const placeholders = columns.map(() => '?').join(', ');
                 
@@ -91,14 +108,16 @@ export class UniversalModule implements AetherModule {
                 try {
                     await db.runSqlite(sql, values);
                     await db.runDuckDB(sql, values);
+                    
+                    const idlName = (this.idl as any).name || 'Unknown';
+                    console.log(`[Universal] ✅ Indexed ${decoded.name} for ${idlName} [Slot: ${tx.slot}]`);
                 } catch (dbErr: any) {
-                    console.error(`[Universal] Database write failure for ${decoded.name}: ${dbErr.message}`);
+                    // Production Boundary: Log specific DB failures but keep the indexer moving
+                    console.error(`[Universal:${this.name}] 🚨 Database write failure for ${decoded.name} [${txSig}]: ${dbErr.message}`);
                 }
-
-                const idlName = (this.idl as any).name || 'Unknown';
-                console.log(`[Universal] Indexed ${decoded.name} for ${idlName} [Slot: ${tx.slot}]`);
             } catch (err: any) {
-                console.error(`[Universal] Decoding/Processing error in ${this.name}: ${err.message}`);
+                // Final Catch-All for the instruction loop
+                console.error(`[Universal:${this.name}] 💀 Critical processing error in ${this.name} [${txSig}]: ${err.message}`);
             }
         }
     }
@@ -131,14 +150,13 @@ export class UniversalModule implements AetherModule {
         return obj;
     }
 
-    extendServer(app: any): void {
+    extendServer(app: any, db: any): void {
         const programId = this.programId;
         const idlName = (this.idl as any).name || 'Unknown';
 
         console.log(`[Universal] Registering Generic API: /api/v1/indexed/${idlName}/:instruction`);
 
         app.get(`/api/v1/indexed/${idlName}/:instruction`, async (req: any, res: any) => {
-            const { db } = require('../db/client');
             const ixName = req.params.instruction.toLowerCase();
             const tableName = `ix_${ixName}`;
             const allowedCols = this.columnWhitelist[tableName];
@@ -160,12 +178,12 @@ export class UniversalModule implements AetherModule {
                 
                 if (validFilters.length > 0) {
                     sql += " WHERE " + validFilters
-                        .map(([key, _]) => `${key} = ?`)
+                        .map(([key, _]) => `"${key}" = ?`)
                         .join(" AND ");
                     params.push(...validFilters.map(([_, v]) => v));
                 }
                 
-                sql += ` ORDER BY slot DESC LIMIT ? OFFSET ?`;
+                sql += ` ORDER BY "slot" DESC LIMIT ? OFFSET ?`;
                 params.push(limit, offset);
                 
                 const rows = await db.querySqlite(sql, params);
@@ -184,7 +202,6 @@ export class UniversalModule implements AetherModule {
 
         // 2. Aggregation Endpoint (Support for: "call counts for specific instructions over a period")
         app.get(`/api/v1/stats/${idlName}/summary`, async (req: any, res: any) => {
-            const { db } = require('../db/client');
             try {
                 const since = req.query.since; // ISO timestamp e.g. 2026-03-01T00:00:00Z
                 const summary: any = { programId, program: idlName, instructions: {} };
@@ -193,7 +210,7 @@ export class UniversalModule implements AetherModule {
                     let countSql = `SELECT COUNT(*) as count FROM ${tableName}`;
                     const params: any[] = [];
                     if (since) {
-                        countSql += ` WHERE timestamp >= ?`;
+                        countSql += ` WHERE "timestamp" >= ?`;
                         params.push(since);
                     }
                     const countRow = await db.querySqlite(countSql, params);

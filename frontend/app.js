@@ -13,6 +13,9 @@ const UI = {
     agenticFeed: document.getElementById('agentic-data'),
     lendingTbody: document.getElementById('lending-data'),
     zkTbody: document.getElementById('zk-data'),
+    // Discovery Engine
+    teleportInput: document.getElementById('discovery-input'),
+    teleportBtn: document.getElementById('teleport-btn'),
 };
 
 let activeTab = 'universal';
@@ -57,12 +60,29 @@ async function fetchData(endpoint) {
     try {
         const res = await fetch(`${API_BASE}${endpoint}`);
         if (!res.ok) throw new Error('API Error');
-        return await res.json();
+        const data = await res.json();
+        
+        // Final Hardening: If health-check, update telemetry stats
+        if (endpoint === '/health' && data) {
+            if (data.lastSlot !== undefined && data.networkSlot !== undefined) {
+                const desync = Math.max(0, data.networkSlot - data.lastSlot);
+                const desyncEl = document.getElementById('network-desync');
+                if (desyncEl) {
+                    desyncEl.textContent = `${desync} SLOTS`;
+                    desyncEl.className = desync < 50 ? 'cyan-text' : 'yellow-text';
+                    if (desync > 500) desyncEl.className = 'red-text';
+                }
+            }
+        }
+        return data;
     } catch (e) {
         console.warn(`Fetch error on ${endpoint}:`, e);
-        return null; // Silent fail for UI demo
+        return null;
     }
 }
+
+// Periodic Telemetry Pulse
+setInterval(() => fetchData('/health'), 5000);
 
 // -----------------------------------------------------
 // PANEL RENDERERS
@@ -70,20 +90,26 @@ async function fetchData(endpoint) {
 
 async function renderUniversal() {
     // 1. Discovery Phase
+    const progMeta = await fetchData(`/v1/programs/${activeProgram}`);
+    if (!progMeta || !progMeta.indexedInstructions || progMeta.indexedInstructions.length === 0) {
+        UI.universalTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color: var(--text-muted)">Waiting for IDL discovery on ${activeProgram}...</td></tr>`;
+        return;
+    }
+
+    const instructions = progMeta.indexedInstructions;
+    if (!activeInstruction) activeInstruction = instructions[0].replace('ix_', '');
+
     if (!universalControlsMounted) {
-        // We will default to Unknown IDL assuming the demo setup uses it.
-        // In a fully dynamic setup we could ping /api/v1/programs to list all.
-        const progMeta = await fetchData(`/v1/programs/${activeProgram}`);
-        const instructions = progMeta?.indexedInstructions || ['ix_placeholder'];
-        
-        activeInstruction = instructions[0].replace('ix_', '');
-        
+        // Structural Purge: Ensure only one dynamic selector appears
+        const oldSelect = document.getElementById('univ-ix-select');
+        if (oldSelect) oldSelect.parentElement.removeChild(oldSelect);
+
         // Inject Dropdown
         const header = document.querySelector('#panel-universal .panel-header');
         const selectHTML = `<select id="univ-ix-select" class="tech-select">
             ${instructions.map(ix => {
-                const cleanName = ix.replace('ix_', '');
-                return `<option value="${cleanName}">${cleanName.toUpperCase()}</option>`;
+                const cleanName = ix.replace('ix_', '').replace(/"/g, '');
+                return `<option value="${cleanName}" ${cleanName === activeInstruction ? 'selected' : ''}>${cleanName.toUpperCase()}</option>`;
             }).join('')}</select>`;
             
         header.insertAdjacentHTML('afterbegin', selectHTML);
@@ -181,6 +207,128 @@ function initDataFetch(tab) {
 
     triggerFetch(); // Run immediately
     pollInterval = setInterval(triggerFetch, POLL_RATE);
+}
+
+// -----------------------------------------------------
+// DISCOVERY ENGINE CONTROL
+// -----------------------------------------------------
+// --- INTEGRATION HUB: TECHNICAL DOCUMENTATION MANIFEST ---
+const docsData = {
+    core: {
+        title: "AETHER_CORE // UNIVERSAL_INDEXING",
+        content: `Aether's primary engine. Performs high-speed Anchor IDL discovery and automated SQL schema generation.
+- 🚀 **Sub-second indexing** from Solana live-stream.
+- 🛡️ **Vacuum-hardened SQL** preventing reserved keyword collisions.
+- 📊 **Dual-Engine Persistence**: SQLite for Registry + DuckDB for Analytics.`,
+        code: `const aether = new AetherSDK();
+await aether.teleport('RAYSHARP...').on('ix', (tx) => {
+    console.log('⚡ High-fidelity indexed event:', tx.name);
+});`
+    },
+    agentic: {
+        title: "AGENTIC_SHARD // COGNITIVE_NARRATIVES",
+        content: `Translates cold on-chain bytes into semantic narratives for AI Agents.
+- 🧠 **Context-Aware Processing**: Links cross-protocol interactions.
+- 💬 **Natural Language Streams**: Ready-for-LLM event feeds.
+- 🔗 **Memory Persistence**: Durable narrative history.`,
+        code: `const agent = new AetherAgentic();
+agent.observe('RAYDIUM_SWAP').on('narrative', (msg) => {
+    // Result: "Trader swapped 50.2 SOL for 1M PEPE in block 410..."
+    agent.remember(msg);
+});`
+    },
+    zk: {
+        title: "ZK_PROOFS // STATELESS_VERIFICATION",
+        content: `Merkle-root anchored state proofs for trustless off-chain computation.
+- 🔒 **Trustless Verification**: Audit protocol state without a full node.
+- 📜 **Stateless Queries**: Instant ZK-backed data retrieval.
+- 🛡️ **Fraud Integrity**: Cryptographic proof of indexing correctness.`,
+        code: `const zk = new AetherZK();
+const proof = await zk.proveState('USER_VAULT_BALANCE');
+const isValid = await zk.verifyOnChain(proof);
+console.log('Proof Integrity:', isValid);`
+    },
+    lending: {
+        title: "LENDING_GUARD // LIQUIDATION_RADAR",
+        content: `Real-time risk monitoring for lending and borrowing protocols.
+- 🚨 **Liquidation Watch**: Identify at-risk positions sub-second.
+- 🛡️ **Vault Integrity**: Cross-checks price oracles against on-chain reality.
+- 📈 **Risk Analytics**: Protocol-wide health metrics.`,
+        code: `const guard = new AetherLending('KAMINO_PUBKEY');
+guard.on('at_risk_position', (user) => {
+    console.warn('⚠️ Liquidation warning for:', user.pubkey);
+});`
+    },
+    nft: {
+        title: "NFT_STREAM // METADATA_AGGREGATION",
+        content: `High-fidelity NFT metadata and ownership auditing.
+- 🖼️ **Rich Metadata**: Sub-second indexing of mints and sales.
+- 📜 **Provenance Audit**: Complete ownership history snapshots.
+- 🛒 **Marketplace Agnostic**: Unified stream for MagicEden, Tensor, and more.`,
+        code: `const nft = new AetherNFT();
+nft.on('mint', (event) => {
+    console.log('✨ New high-value mint detected:', event.uri);
+});`
+    }
+};
+
+function showModuleDocs(moduleId) {
+    const doc = docsData[moduleId];
+    const viewport = document.getElementById('docs-viewport');
+    
+    // Update active tab styling
+    document.querySelectorAll('.docs-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    viewport.innerHTML = `
+        <div class="docs-reveal active">
+            <h4 class="cyan-text">${doc.title}</h4>
+            <div class="docs-description">${doc.content}</div>
+            <div class="code-header">SDK_BLUEPRINT_v4</div>
+            <pre class="code-block">${doc.code}</pre>
+        </div>
+    `;
+}
+
+// Set initial docs state
+window.addEventListener('DOMContentLoaded', () => {
+    showModuleDocs('core');
+});
+
+if (UI.teleportBtn) {
+    UI.teleportBtn.addEventListener('click', async () => {
+        const programId = UI.teleportInput.value.trim();
+        if (!programId || programId.length < 32) {
+            alert("LIBRARIAN: Invalid Program ID signature detected.");
+            return;
+        }
+
+        UI.teleportBtn.textContent = 'TELEPORTING...';
+        UI.teleportBtn.disabled = true;
+
+        try {
+            const res = await fetch(`${API_BASE}/v1/universal/index`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ programId })
+            });
+            
+            const result = await res.json();
+            if (res.ok) {
+                console.log(`[Librarian] Teleport Success: ${result.name}`);
+                activeProgram = programId;
+                universalControlsMounted = false; // Reset to re-discover IDL
+                initDataFetch('universal');
+            } else {
+                alert(`LIBRARIAN: Discovery Failure - ${result.error}`);
+            }
+        } catch (e) {
+            console.error("[Librarian] Teleport Error:", e);
+        } finally {
+            UI.teleportBtn.textContent = 'TELEPORT_';
+            UI.teleportBtn.disabled = false;
+        }
+    });
 }
 
 // Initial Boot

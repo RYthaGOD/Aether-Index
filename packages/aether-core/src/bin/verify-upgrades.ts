@@ -1,8 +1,8 @@
 import { db } from '../db/client';
 import { WebhookReceiver } from '../api/receiver';
 import { GuardWorker } from '../worker/guardian';
-import { AgenticModule } from '../../../aether-agentic/src/index';
-import { LendingModule } from '../../../aether-lending/src/index';
+import { AgenticModule } from '@aether/agentic';
+import { LendingModule } from '@aether/lending';
 import chalk from 'chalk';
 
 /**

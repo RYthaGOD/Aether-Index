@@ -18,10 +18,18 @@
                 <img src="assets/logo.png" alt="Aether Logo" class="brand-logo" />
                 <div class="brand-text">
                     <h1>AETHER INDEX</h1>
-                    <span class="sub-text">v2.4.0 // LIBRARIAN STANDARD // SYNC: <span id="sync-status" class="status-indicator online">ONLINE</span></span>
+                    <span class="sub-text">v4.0.0 // TOTAL_MANIFEST // <span id="discovery-status" class="cyan-text">READY_FOR_PRODUCTION</span></span>
                 </div>
             </div>
+
+            <!-- DISCOVERY ENGINE: THE TELEPORT INDEXER -->
+            <div class="teleport-panel">
+                <input type="text" id="discovery-input" placeholder="ENTER_PROGRAM_ID_TO_INDEX_" class="neon-input">
+                <button id="teleport-btn" class="neon-button">TELEPORT_</button>
+            </div>
+
             <div class="time-panel">
+                <span id="sync-status" class="status-indicator online">SYNC: ONLINE</span>
                 <span id="sys-time">00:00:00.00</span>
                 <div class="sys-pulse"></div>
             </div>
@@ -29,7 +37,7 @@
 
         <!-- NAVIGATION / CCTV CONTROLS -->
         <nav class="sidebar neon-border">
-            <div class="nav-title">MODULE_SELECT_</div>
+            <div class="nav-title">MODULE_SELECT__</div>
             <ul class="nav-links">
                 <li class="active" data-target="universal">Universal [CORE]</li>
                 <li data-target="agentic">Agentic [MEMORY]</li>
@@ -37,8 +45,9 @@
                 <li data-target="zk">ZK Proofs [AUDIT]</li>
             </ul>
             <div class="system-stats">
-                <div class="stat-row"><span>CPU_LOAD</span> <span class="cyan-text">12%</span></div>
-                <div class="stat-row"><span>NET_THRUPUT</span> <span class="yellow-text">8.4GB/s</span></div>
+                <div class="stat-row"><span>DISK_USAGE</span> <span class="cyan-text">42%</span></div>
+                <div class="stat-row"><span>NET_THRUPUT</span> <span class="yellow-text">1.2GB/s</span></div>
+                <div class="stat-row"><span>NETWORK_DESYNC</span> <span id="network-desync" class="cyan-text">-- SLOTS</span></div>
             </div>
         </nav>
 
@@ -60,10 +69,29 @@
                                 <th>SLOT</th>
                             </tr>
                         </thead>
-                        <tbody id="universal-data">
-                            <!-- Data populated by JS -->
+                        <tbody id="universal-stream">
+                            <!-- Data populated by JS (id matched to app.js) -->
                         </tbody>
                     </table>
+                </div>
+            </section>
+
+            <!-- INTEGRATION HUB: TECHNICAL DOCUMENTATION & SDK BLUEPRINTS -->
+            <section class="developer-sanctum neon-border">
+                <div class="sanctum-header">
+                    <h3>INTEGRATION_HUB_ // TECH_DOCS_v4</h3>
+                    <div class="example-selector">
+                        <button onclick="showModuleDocs('core')" class="docs-btn active">CORE</button>
+                        <button onclick="showModuleDocs('agentic')" class="docs-btn">AGENTIC</button>
+                        <button onclick="showModuleDocs('zk')" class="docs-btn">ZK_PROOFS</button>
+                        <button onclick="showModuleDocs('lending')" class="docs-btn">LENDING</button>
+                        <button onclick="showModuleDocs('nft')" class="docs-btn">NFT_DATA</button>
+                    </div>
+                </div>
+                <div class="sanctum-content">
+                    <div id="docs-viewport" class="docs-container">
+                        <div class="docs-placeholder">Select a module above to manifest technical blueprints...</div>
+                    </div>
                 </div>
             </section>
 

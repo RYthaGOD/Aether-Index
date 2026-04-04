@@ -9,6 +9,7 @@
     "strict": false,
     "baseUrl": ".",
     "outDir": "./dist",
+    "rootDir": ".",
     "declaration": true,
     "composite": true
   },

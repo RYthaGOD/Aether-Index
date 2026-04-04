@@ -25,5 +25,8 @@ export const config = {
     },
     server: {
         port: Number(process.env.PORT || 4000),
+    },
+    redis: {
+        url: process.env.REDIS_URL || 'redis://localhost:6379',
     }
 };

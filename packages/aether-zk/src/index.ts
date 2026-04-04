@@ -49,11 +49,10 @@ export class ZkModule implements AetherModule {
     }
   }
 
-  extendServer(app: any): void {
+  extendServer(app: any, db: DatabaseClient): void {
     console.log("[ZK] Registering API: /api/zk/proofs");
 
     app.get('/api/zk/proofs', async (req: any, res: any) => {
-        const { db } = require('../../aether-core/src/db/client');
         try {
           const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
           const offset = parseInt(req.query.offset) || 0;

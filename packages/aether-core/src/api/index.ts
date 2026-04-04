@@ -10,14 +10,10 @@ import { GuardWorker } from '../worker/guardian';
 import { config } from '../config';
 import { ShardLockModule } from '../modules/shard_lock';
 import { UniversalModule } from '../modules/universal';
-// @ts-ignore
-import { AgenticModule } from '../../aether-agentic/src/index';
-// @ts-ignore
-import { ZkModule } from '../../aether-zk/src/index';
-// @ts-ignore
-import { LendingModule } from '../../aether-lending/src/index';
-// @ts-ignore
-import { NftModule } from '../../aether-nft/src/index';
+import { AgenticModule } from '@aether/agentic';
+import { ZkModule } from '@aether/zk';
+import { LendingModule } from '@aether/lending';
+import { NftModule } from '@aether/nft';
 import fs from 'fs';
 import path from 'path';
 
@@ -47,23 +43,107 @@ const resolvers = {
     }
 };
 
+import { IdlFetcher } from '../worker/idl_fetcher';
+
 async function startServer() {
     const app = express();
     app.use(cors());
     app.use(express.json());
 
-    // Serve Frontend Statically (Deployment Ready for Railway)
-    const frontendPath = path.resolve(process.cwd(), 'frontend');
+    // 1. Static Asset Anchoring (Neon-Pulp Front Door)
+    let frontendPath = path.resolve(process.cwd(), 'frontend');
+    if (!fs.existsSync(frontendPath)) {
+        // Workspace climbing: Check one level up (Monorepo Root)
+        frontendPath = path.resolve(process.cwd(), '..', '..', 'frontend');
+        if (!fs.existsSync(frontendPath)) {
+            // Last resort: Absolute check from current file location to dist
+            frontendPath = path.resolve(__dirname, '..', '..', '..', '..', 'frontend');
+        }
+    }
+
+    if (fs.existsSync(frontendPath)) {
+        const files = fs.readdirSync(frontendPath);
+        console.log(`[Librarian] Static Assets anchored at: ${frontendPath}`);
+        console.log(`[Librarian] Contents: ${files.join(', ')}`);
+    } else {
+        console.warn(`[Librarian] ⚠️ Landing page portal not found at expected paths.`);
+    }
+
+    // High-priority static server
     app.use(express.static(frontendPath));
 
-    // API Healthcheck
-    app.get('/api/health', (_req, res) => {
+    // Explicit catch-all for SPA landing (Restores Neon-Pulp Interface)
+    app.get('/', (_req, res) => {
+        const indexPath = path.join(frontendPath, 'index.html');
+        if (fs.existsSync(indexPath)) {
+            res.sendFile(indexPath);
+        } else {
+            res.status(404).send('Librarian: Entry portal (index.html) missing.');
+        }
+    });
+
+    // 2. The Discovery Engine: Configuration & Portal
+    const idlPath = path.resolve(process.cwd(), 'data', 'idls');
+    const idlFetcher = new IdlFetcher(config.solana.rpcUrl, idlPath);
+    const activeModules: { [programId: string]: UniversalModule } = {};
+
+    // API Healthcheck: Proof of Speed Manifest
+    app.get('/api/health', async (_req, res) => {
+        let networkSlot = 0;
+        try {
+            // Fetching the current high-water-mark slot from RPC
+            const rpcRes = await fetch(config.solana.rpcUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getSlot" })
+            });
+            const rpcData : any = await rpcRes.json();
+            networkSlot = rpcData.result || 0;
+        } catch (e) {
+            console.warn('[Librarian] Health RPC failure:', (e as any).message);
+        }
+
+        const lastSlot = await db.getLastIndexedSlot().catch(() => 0);
+
         res.json({
             status: 'ONLINE',
             service: 'Aether Librarian',
             uptime: Math.round(process.uptime()),
+            redis: db['redis']?.isOpen ? 'CONNECTED' : 'DISCONNECTED',
+            lastSlot,
+            networkSlot,
             timestamp: new Date().toISOString()
         });
+    });
+
+    // Discovery Engine: On-Demand Indexing Pipeline
+    app.post('/api/v1/universal/index', async (req: any, res: any) => {
+        const { programId } = req.body;
+        if (!programId) return res.status(400).json({ error: 'Program ID required' });
+
+        try {
+            if (activeModules[programId]) {
+                return res.json({ message: 'Librarian is already indexing this program.', programId });
+            }
+
+            const idl = await idlFetcher.fetchIdl(programId);
+            if (!idl) return res.status(404).json({ error: 'No on-chain IDL discovered for this program.' });
+
+            const idlFilePath = path.join(idlPath, `${programId}.json`);
+            const module = new UniversalModule(programId, idlFilePath);
+            
+            await module.initialize(db);
+            module.extendServer(app, db);
+            activeModules[programId] = module;
+
+            res.json({
+                message: '⚡ Discovery Complete. Librarian is now indexing.',
+                programId,
+                name: (idl as any).name || 'Unknown'
+            });
+        } catch (err: any) {
+            res.status(500).json({ error: `Discovery failure: ${err.message}` });
+        }
     });
 
     const httpServer = createServer(app);
@@ -116,6 +196,10 @@ async function startServer() {
             await syncUniversalModules();
 
             // Hot-Hook Watcher: Re-syncing IDLs and Webhooks on the fly
+            if (!fs.existsSync(idlDir)) {
+                fs.mkdirSync(idlDir, { recursive: true });
+            }
+
             fs.watch(idlDir, async (event, filename) => {
                 if (filename && filename.endsWith('.json')) {
                     console.log(`[Librarian] Hot-Hook Change Detected: ${filename}`);

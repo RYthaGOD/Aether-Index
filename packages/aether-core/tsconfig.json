@@ -2,12 +2,25 @@
   "extends": "../../tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "src",
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "aether-shared": ["../shared"],
+      "@aether/sdk": ["../aether-sdk/src"],
+      "@aether/agentic": ["../aether-agentic/src"],
+      "@aether/zk": ["../aether-zk/src"],
+      "@aether/lending": ["../aether-lending/src"],
+      "@aether/nft": ["../aether-nft/src"]
+    }
   },
   "references": [
-    { "path": "../shared" }
+    { "path": "../shared" },
+    { "path": "../aether-agentic" },
+    { "path": "../aether-zk" },
+    { "path": "../aether-lending" },
+    { "path": "../aether-nft" }
   ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

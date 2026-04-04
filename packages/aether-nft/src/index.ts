@@ -44,11 +44,10 @@ export class NftModule implements AetherModule {
     }
   }
 
-  extendServer(app: any): void {
+  extendServer(app: any, db: DatabaseClient): void {
     console.log("[NFT] Registering API: /api/nft/rarity/:mint");
 
     app.get('/api/nft/rarity/:mint', async (req: any, res: any) => {
-        const { db } = require('../../aether-core/src/db/client');
         try {
           const rows = await db.querySqlite("SELECT * FROM nft_assets WHERE mint = ?", [req.params.mint]);
           if (rows.length === 0) {
@@ -61,7 +60,6 @@ export class NftModule implements AetherModule {
       });
 
     app.get('/api/nft/collection/:id', async (req: any, res: any) => {
-        const { db } = require('../../aether-core/src/db/client');
         try {
           const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
           const offset = parseInt(req.query.offset) || 0;

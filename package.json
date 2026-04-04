@@ -13,11 +13,17 @@
     "packages/shared"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build:shared": "tsc -b packages/shared",
+    "build:sdk": "tsc -b packages/aether-sdk",
+    "build:shards": "tsc -b packages/aether-agentic packages/aether-zk packages/aether-lending packages/aether-nft",
+    "build:core": "tsc -b packages/aether-core",
+    "build": "npm run build:shared && npm run build:sdk && npm run build:shards && npm run build:core",
+    "backfill": "ts-node -P packages/aether-core/tsconfig.json packages/aether-core/src/bin/backfill.ts",
     "dev": "npm run dev --workspace=@aether/core",
-    "create-module": "ts-node packages/aether-core/src/bin/aether-cli.ts create-module",
-    "simulate": "ts-node packages/aether-core/src/bin/simulate.ts",
-    "verify-upgrades": "ts-node packages/aether-core/src/bin/verify-upgrades.ts",
+    "teleport": "powershell -Command \"Remove-Item -Path 'packages/*/dist' -Recurse -Force -ErrorAction SilentlyContinue; npm run build; railway up\"",
+    "create-module": "ts-node -P tsconfig.dev.json packages/aether-core/src/bin/aether-cli.ts create-module",
+    "simulate": "ts-node -P tsconfig.dev.json packages/aether-core/src/bin/simulate.ts",
+    "verify-upgrades": "ts-node -P tsconfig.dev.json packages/aether-core/src/bin/verify-upgrades.ts",
     "start": "npm run start --workspace=@aether/core",
     "test": "npm test --workspaces"
   },

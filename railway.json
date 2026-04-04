@@ -8,7 +8,7 @@
     "numReplicas": 1,
     "sleepOnIdle": false,
     "restartPolicyType": "ON_FAILURE",
-    "healthcheckPath": "/",
-    "healthcheckTimeout": 60
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 120
   }
 }

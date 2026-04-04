@@ -26,7 +26,7 @@ export class WebhookReceiver {
             
             // Dynamic API Discovery & Registration
             if (app && module.extendServer) {
-                module.extendServer(app);
+                module.extendServer(app, db);
             }
             
             this.modules.push(module);
@@ -95,6 +95,13 @@ export class WebhookReceiver {
 
         for (const tx of transactions) {
             if (tx.slot > maxSlot) maxSlot = tx.slot;
+            
+            // Redis Guard: Ensure signature uniqueness across the cluster
+            const isDuplicate = await db.isDuplicateTransaction(tx.signature);
+            if (isDuplicate) {
+                console.log(`[Webhook] Skipping duplicate transaction: ${tx.signature.slice(0, 8)}...`);
+                continue;
+            }
             
             await Promise.all(
                 this.modules.map(module => 

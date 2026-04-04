@@ -10,6 +10,7 @@ export interface DatabaseClient {
   insertShardLock(shard: any): Promise<void>;
   getShardLocations(merkleRoot: string): Promise<any[]>;
   runShardMaintenance(): Promise<void>;
+  isDuplicateTransaction(signature: string): Promise<boolean>;
 }
 
 /**
@@ -57,6 +58,7 @@ export interface AetherModule {
    * Universal Integration: Allows modules to dynamically register their 
    * own API routes/endpoints (REST, GraphQL, etc.) to the core server.
    * @param app The Express application instance from the core engine.
+   * @param db The shared Aether Database Client for module-specific queries.
    */
-  extendServer?(app: any): void;
+  extendServer?(app: any, db: DatabaseClient): void;
 }

@@ -61,11 +61,10 @@ export class LendingModule implements AetherModule {
     }
   }
 
-  extendServer(app: any): void {
+  extendServer(app: any, db: DatabaseClient): void {
     console.log("[Lending] Registering API: /api/lending/liquidations");
     
     app.get('/api/lending/liquidations', async (req: any, res: any) => {
-      const { db } = require('../../aether-core/src/db/client');
       try {
         const limit = Math.min(parseInt(req.query.limit) || 50, 500);
         const offset = parseInt(req.query.offset) || 0;
@@ -83,7 +82,6 @@ export class LendingModule implements AetherModule {
     });
 
     app.get('/api/lending/protocol/:id', async (req: any, res: any) => {
-        const { db } = require('../../aether-core/src/db/client');
         try {
           const limit = Math.min(parseInt(req.query.limit) || 50, 500);
           const offset = parseInt(req.query.offset) || 0;

@@ -3,12 +3,17 @@
   "version": "1.0.0",
   "description": "Aether Index Core Engine",
   "main": "dist/api/index.js",
+  "types": "dist/api/index.d.ts",
   "scripts": {
     "build": "tsc",
     "start": "node dist/api/index.js",
     "dev": "ts-node src/api/index.ts"
   },
   "dependencies": {
+    "@aether/agentic": "*",
+    "@aether/lending": "*",
+    "@aether/nft": "*",
+    "@aether/zk": "*",
     "@coral-xyz/anchor": "^0.30.1",
     "@raydium-io/raydium-sdk": "^1.3.1-beta.58",
     "@solana/buffer-layout": "^4.0.1",
@@ -28,6 +33,7 @@
     "inquirer": "^8.2.7",
     "ora": "^5.4.1",
     "p-limit": "^7.3.0",
+    "pako": "^2.1.0",
     "redis": "^5.11.0",
     "sqlite3": "^5.1.7",
     "subscriptions-transport-ws": "^0.11.0",
@@ -38,6 +44,7 @@
     "@types/express": "^5.0.6",
     "@types/inquirer": "^8.2.12",
     "@types/node": "^25.5.0",
-    "@types/sqlite3": "^3.1.11"
+    "@types/sqlite3": "^3.1.11",
+    "js-sha256": "^0.11.1"
   }
 }
