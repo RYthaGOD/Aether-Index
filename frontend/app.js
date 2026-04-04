@@ -192,6 +192,43 @@ async function renderZK() {
     `).join('');
 }
 
+async function renderBags() {
+    const launchData = await fetchData('/v1/indexed/dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN/create_virtual_pool_metadata?limit=10');
+    const feeData = await fetchData('/v1/indexed/FEE2tBhCKAt7shrod19QttSVREUYPiyMzoku1mL1gqVK/claim_user?limit=10');
+
+    const launchEl = document.getElementById('bags-launches');
+    const feeEl = document.getElementById('bags-fees');
+
+    if (launchData && launchData.data && launchData.data.length > 0) {
+        launchEl.innerHTML = launchData.data.map(r => `
+            <div class="bag-card">
+                <div class="card-title">${r.name || 'ANONYMOUS_LAUNCH'}</div>
+                <div class="card-meta">
+                    SIGNATURE: ${truncate(r.signature)}<br>
+                    SYMBOL: ${r.symbol || '???'} | CREATOR: ${truncate(r.creator || 'UNKNOWN')}
+                </div>
+            </div>
+        `).join('');
+    } else {
+        launchEl.innerHTML = `<div class="loading-manifest">AWAITING_NEW_GEMS...</div>`;
+    }
+
+    if (feeData && feeData.data && feeData.data.length > 0) {
+        feeEl.innerHTML = feeData.data.map(r => `
+            <div class="bag-card">
+                <div class="card-title">FEE_REVENUE_CLAIM</div>
+                <div class="card-meta">
+                    SIGNATURE: ${truncate(r.signature)}<br>
+                    VAULT: ${truncate(r.platform_vault || r.fee_share_authority || '...')}<br>
+                    STATUS: <span class="cyan-text">DISTRIBUTED</span>
+                </div>
+            </div>
+        `).join('');
+    } else {
+        feeEl.innerHTML = `<div class="loading-manifest">SYNCING_PROTOCOL_REVENUE...</div>`;
+    }
+}
+
 // -----------------------------------------------------
 // POLLING ORCHESTRATOR
 // -----------------------------------------------------
@@ -203,6 +240,7 @@ function initDataFetch(tab) {
         if (tab === 'agentic') renderAgentic();
         if (tab === 'lending') renderLending();
         if (tab === 'zk') renderZK();
+        if (tab === 'bags') renderBags();
     };
 
     triggerFetch(); // Run immediately
@@ -268,6 +306,17 @@ guard.on('at_risk_position', (user) => {
         code: `const nft = new AetherNFT();
 nft.on('mint', (event) => {
     console.log('✨ New high-value mint detected:', event.uri);
+});`
+    },
+    bags: {
+        title: "BAGS_EXPLORER // PROTOCOL_INTELLIGENCE",
+        content: `Real-time monitoring of the Bags.fm ecosystem and fee-sharing mechanics.
+- 💎 **Launch Tracker**: Identify new tokens at the moment of creation.
+- 💰 **Fee Transparency**: Real-time audit of protocol revenue and creator yields.
+- ⚡ **Universal Compatibility**: Leveraging Aether's dynamic decoding for all Bag programs.`,
+        code: `const bags = new AetherBags();
+bags.monitor('FEE2tBh...').on('dividend', (data) => {
+    console.log('💸 New fee distribution detected:', data.amount);
 });`
     }
 };

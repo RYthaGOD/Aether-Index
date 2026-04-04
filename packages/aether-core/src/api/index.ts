@@ -183,7 +183,8 @@ async function startServer() {
                     try {
                         const idlPath = path.join(idlDir, file);
                         const idl = JSON.parse(fs.readFileSync(idlPath, 'utf8'));
-                        const programId = file.replace('.json', '');
+                        const programId = idl.address || file.replace('.json', '');
+                        
                         if (programId.length >= 32) {
                             await WebhookReceiver.registerModule(new UniversalModule(programId, idlPath), app);
                         }

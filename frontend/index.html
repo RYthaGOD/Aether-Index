@@ -3,155 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aether Index | Telemetry Dashboard</title>
-    <!-- Google Fonts for Typography -->
+    <title>Aether Index | The Sovereign Solana Engine</title>
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Landing-specific overrides */
+        body { overflow-y: auto; }
+    </style>
 </head>
 <body>
+    <div class="bg-blueprint"></div>
     <div class="crt-overlay"></div>
-    <div class="grid-container">
-        
-        <!-- HEADER -->
-        <header class="header neon-border">
-            <div class="logo-container">
-                <img src="assets/logo.png" alt="Aether Logo" class="brand-logo" />
-                <div class="brand-text">
-                    <h1>AETHER INDEX</h1>
-                    <span class="sub-text">v4.0.0 // TOTAL_MANIFEST // <span id="discovery-status" class="cyan-text">READY_FOR_PRODUCTION</span></span>
-                </div>
-            </div>
 
-            <!-- DISCOVERY ENGINE: THE TELEPORT INDEXER -->
-            <div class="teleport-panel">
-                <input type="text" id="discovery-input" placeholder="ENTER_PROGRAM_ID_TO_INDEX_" class="neon-input">
-                <button id="teleport-btn" class="neon-button">TELEPORT_</button>
+    <div class="landing-container">
+        <!-- NAVIGATION -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <img src="assets/logo.png" alt="Aether Logo" style="height: 32px; filter: drop-shadow(0 0 8px var(--accent-cyan));" />
+                <span>AETHER_INDEX</span>
             </div>
-
-            <div class="time-panel">
-                <span id="sync-status" class="status-indicator online">SYNC: ONLINE</span>
-                <span id="sys-time">00:00:00.00</span>
-                <div class="sys-pulse"></div>
-            </div>
-        </header>
-
-        <!-- NAVIGATION / CCTV CONTROLS -->
-        <nav class="sidebar neon-border">
-            <div class="nav-title">MODULE_SELECT__</div>
-            <ul class="nav-links">
-                <li class="active" data-target="universal">Universal [CORE]</li>
-                <li data-target="agentic">Agentic [MEMORY]</li>
-                <li data-target="lending">Lending [GUARD]</li>
-                <li data-target="zk">ZK Proofs [AUDIT]</li>
+            <ul class="nav-links-public">
+                <li><a href="index.html">HOME_</a></li>
+                <li><a href="docs.html">BLUEPRINTS_</a></li>
+                <li><a href="the_aether.html">THE_AETHER_</a></li>
+                <li><a href="https://github.com/RYthaGOD/Aether-Index" target="_blank">CODE_</a></li>
             </ul>
-            <div class="system-stats">
-                <div class="stat-row"><span>DISK_USAGE</span> <span class="cyan-text">42%</span></div>
-                <div class="stat-row"><span>NET_THRUPUT</span> <span class="yellow-text">1.2GB/s</span></div>
-                <div class="stat-row"><span>NETWORK_DESYNC</span> <span id="network-desync" class="cyan-text">-- SLOTS</span></div>
-            </div>
         </nav>
 
-        <!-- MAIN VIEWPORT -->
-        <main class="viewport">
-            
-            <!-- PANEL: UNIVERSAL -->
-            <section id="panel-universal" class="panel active">
-                <div class="panel-header">
-                    <h2>UNIVERSAL_STREAM</h2>
-                    <span class="badge yellow-badge">REAL-TIME</span>
-                </div>
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>SIGNATURE</th>
-                                <th>INSTRUCTION</th>
-                                <th>SLOT</th>
-                            </tr>
-                        </thead>
-                        <tbody id="universal-stream">
-                            <!-- Data populated by JS (id matched to app.js) -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+        <!-- HERO SECTION -->
+        <section class="hero-section">
+            <div class="hero-marker">[ STATUS: PROD_READY // VER: 4.0.0 ]</div>
+            <h1 class="hero-title">THE SOVEREIGN<br><span style="color: var(--accent-cyan);">SOLANA ENGINE</span></h1>
+            <p class="hero-description">
+                Universal Indexing. Dynamic Decoding. Real-Time Analytics. 
+                Transform raw on-chain data into structured intelligence with zero custom code.
+            </p>
+            <div class="hero-actions">
+                <button class="btn-primary" onclick="window.location.href='the_aether.html'">LAUNCH_THE_AETHER</button>
+                <button class="btn-secondary" onclick="window.location.href='docs.html'">READ_BLUEPRINTS</button>
+            </div>
+        </section>
 
-            <!-- INTEGRATION HUB: TECHNICAL DOCUMENTATION & SDK BLUEPRINTS -->
-            <section class="developer-sanctum neon-border">
-                <div class="sanctum-header">
-                    <h3>INTEGRATION_HUB_ // TECH_DOCS_v4</h3>
-                    <div class="example-selector">
-                        <button onclick="showModuleDocs('core')" class="docs-btn active">CORE</button>
-                        <button onclick="showModuleDocs('agentic')" class="docs-btn">AGENTIC</button>
-                        <button onclick="showModuleDocs('zk')" class="docs-btn">ZK_PROOFS</button>
-                        <button onclick="showModuleDocs('lending')" class="docs-btn">LENDING</button>
-                        <button onclick="showModuleDocs('nft')" class="docs-btn">NFT_DATA</button>
-                    </div>
-                </div>
-                <div class="sanctum-content">
-                    <div id="docs-viewport" class="docs-container">
-                        <div class="docs-placeholder">Select a module above to manifest technical blueprints...</div>
-                    </div>
-                </div>
-            </section>
+        <!-- FEATURE GRID -->
+        <section class="feature-grid">
+            <div class="feature-card">
+                <span class="feature-tag">CORE_LOGIC</span>
+                <h3>Universal Indexing</h3>
+                <p>Drop any Anchor IDL and immediately manifest a hardened REST API. No manual instruction mapping required.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-tag">ANALYTICS</span>
+                <h3>Dual-DB Architecture</h3>
+                <p>SQLite for metadata persistence and DuckDB for high-speed columnar indexing. Performance without compromise.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-tag">SECURITY</span>
+                <h3>IDL-Derived Guard</h3>
+                <p>SQL Injection hardening through automated column whitelisting, derived directly from your program's schema.</p>
+            </div>
+        </section>
 
-            <!-- PANEL: AGENTIC -->
-            <section id="panel-agentic" class="panel">
-                <div class="panel-header">
-                    <h2>SEMANTIC_NARRATIVES</h2>
-                    <span class="badge cyan-badge">COGNITIVE_LAYER</span>
-                </div>
-                <div class="feed-wrapper" id="agentic-data">
-                    <!-- Data populated by JS -->
-                </div>
-            </section>
+        <!-- INDUSTRIAL STATS -->
+        <section class="industry-stats">
+            <div class="stat-item">
+                <span class="stat-value">268+</span>
+                <span class="stat-label">DYNAMIC_TABLES</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">1.2GB/s</span>
+                <span class="stat-label">NET_THRUPUT</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">0ms</span>
+                <span class="stat-label">LAG_TOLERANCE</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">BIT</span>
+                <span class="stat-label">PERFECT_INTEGRITY</span>
+            </div>
+        </section>
 
-            <!-- PANEL: LENDING -->
-            <section id="panel-lending" class="panel">
-                <div class="panel-header">
-                    <h2>LIQUIDATION_RADAR</h2>
-                    <span class="badge red-badge">HIGH_PRIORITY</span>
+        <!-- SHARD ECOSYSTEM -->
+        <div style="margin-top: 6rem; border-top: 1px solid var(--border-color); padding-top: 4rem;">
+            <div style="font-family: var(--font-mono); color: var(--text-muted); font-size: 0.8rem; margin-bottom: 2rem;">[ SHARD_ECOSYSTEM_v4 ]</div>
+            <div class="feature-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                <div class="feature-card" style="padding: 1.5rem;">
+                    <h4 style="color: var(--accent-cyan); font-family: var(--font-mono);">ZK_SHARD</h4>
+                    <p style="font-size: 0.8rem;">Light Protocol state tracking.</p>
                 </div>
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>SIGNATURE</th>
-                                <th>PROTOCOL</th>
-                                <th>REPAID_AMOUNT (TEXT)</th>
-                            </tr>
-                        </thead>
-                        <tbody id="lending-data">
-                            <!-- Data populated by JS -->
-                        </tbody>
-                    </table>
+                <div class="feature-card" style="padding: 1.5rem;">
+                    <h4 style="color: var(--accent-yellow); font-family: var(--font-mono);">AGENTIC_SHARD</h4>
+                    <p style="font-size: 0.8rem;">Narrative RAG synthesis.</p>
                 </div>
-            </section>
+                <div class="feature-card" style="padding: 1.5rem;">
+                    <h4 style="color: var(--accent-red); font-family: var(--font-mono);">LENDING_SHARD</h4>
+                    <p style="font-size: 0.8rem;">Liquidation monitoring.</p>
+                </div>
+                <div class="feature-card" style="padding: 1.5rem;">
+                    <h4 style="color: #fff; font-family: var(--font-mono);">NFT_SHARD</h4>
+                    <p style="font-size: 0.8rem;">Attribute ranking & mints.</p>
+                </div>
+            </div>
+        </div>
 
-            <!-- PANEL: ZK -->
-            <section id="panel-zk" class="panel">
-                <div class="panel-header">
-                    <h2>ZERO_KNOWLEDGE_LOGS</h2>
-                    <span class="badge cyan-badge">VERIFIED</span>
-                </div>
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>SIGNATURE</th>
-                                <th>STATE_ROOT</th>
-                                <th>STATUS</th>
-                            </tr>
-                        </thead>
-                        <tbody id="zk-data">
-                            <!-- Data populated by JS -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-
-        </main>
+        <footer style="margin-top: 8rem; padding: 4rem 0; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-family: var(--font-mono); color: var(--text-muted); font-size: 0.7rem;">
+            <div>© 2026 AETHER_INDEX // OPERATING_UNDER_RYKIRI_PROTOCOL</div>
+            <div style="display: flex; gap: 2rem;">
+                <a href="https://github.com/RYthaGOD/Aether-Index" style="color: inherit; text-decoration: none;">GITHUB_</a>
+                <a href="#" style="color: inherit; text-decoration: none;">TWITTER_</a>
+                <a href="#" style="color: inherit; text-decoration: none;">DOCUMENTATION_</a>
+            </div>
+        </footer>
     </div>
-    <script src="app.js"></script>
 </body>
 </html>

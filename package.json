@@ -19,6 +19,7 @@
     "build:core": "tsc -b packages/aether-core",
     "build": "npm run build:shared && npm run build:sdk && npm run build:shards && npm run build:core",
     "backfill": "ts-node -P packages/aether-core/tsconfig.json packages/aether-core/src/bin/backfill.ts",
+    "backfill:bags": "ts-node -P packages/aether-core/tsconfig.json packages/aether-core/src/bin/backfill-bags.ts",
     "dev": "npm run dev --workspace=@aether/core",
     "teleport": "powershell -Command \"Remove-Item -Path 'packages/*/dist' -Recurse -Force -ErrorAction SilentlyContinue; npm run build; railway up\"",
     "create-module": "ts-node -P tsconfig.dev.json packages/aether-core/src/bin/aether-cli.ts create-module",

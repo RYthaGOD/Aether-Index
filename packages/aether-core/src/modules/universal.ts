@@ -99,7 +99,9 @@ export class UniversalModule implements AetherModule {
                 }
 
                 const columns = Object.keys(data).map(c => `"${c}"`);
-                const values = Object.values(data);
+                const values = Object.values(data).map(val => 
+                    (typeof val === 'object' && val !== null) ? JSON.stringify(val) : val
+                );
                 const placeholders = columns.map(() => '?').join(', ');
                 
                 const sql = `INSERT OR IGNORE INTO ${tableName} (${columns.join(', ')}) VALUES (${placeholders})`;
@@ -154,9 +156,10 @@ export class UniversalModule implements AetherModule {
         const programId = this.programId;
         const idlName = (this.idl as any).name || 'Unknown';
 
-        console.log(`[Universal] Registering Generic API: /api/v1/indexed/${idlName}/:instruction`);
+        console.log(`[Universal] Registering Generic API for ${idlName}: /api/v1/indexed/${idlName}/:instruction`);
+        console.log(`[Universal] Registering Pubkey API for ${idlName}: /api/v1/indexed/${programId}/:instruction`);
 
-        app.get(`/api/v1/indexed/${idlName}/:instruction`, async (req: any, res: any) => {
+        const handleIndexedRequest = async (req: any, res: any) => {
             const ixName = req.params.instruction.toLowerCase();
             const tableName = `ix_${ixName}`;
             const allowedCols = this.columnWhitelist[tableName];
@@ -198,10 +201,13 @@ export class UniversalModule implements AetherModule {
             } catch (err) {
                 res.status(500).json({ error: `Failed to query dynamic table ${tableName}` });
             }
-        });
+        };
+
+        app.get(`/api/v1/indexed/${idlName}/:instruction`, handleIndexedRequest);
+        app.get(`/api/v1/indexed/${programId}/:instruction`, handleIndexedRequest);
 
         // 2. Aggregation Endpoint (Support for: "call counts for specific instructions over a period")
-        app.get(`/api/v1/stats/${idlName}/summary`, async (req: any, res: any) => {
+        const handleStatsRequest = async (req: any, res: any) => {
             try {
                 const since = req.query.since; // ISO timestamp e.g. 2026-03-01T00:00:00Z
                 const summary: any = { programId, program: idlName, instructions: {} };
@@ -222,16 +228,22 @@ export class UniversalModule implements AetherModule {
             } catch (err) {
                 res.status(500).json({ error: "Failed to fetch program statistics" });
             }
-        });
+        };
+
+        app.get(`/api/v1/stats/${idlName}/summary`, handleStatsRequest);
+        app.get(`/api/v1/stats/${programId}/summary`, handleStatsRequest);
 
         // 3. Health / Discovery Endpoint
-        app.get(`/api/v1/programs/${idlName}`, async (_req: any, res: any) => {
+        const handleDiscoveryRequest = async (_req: any, res: any) => {
             res.json({
                 programId,
                 name: idlName,
                 indexedInstructions: Object.keys(this.tableMap),
                 tables: Object.values(this.tableMap),
             });
-        });
+        };
+
+        app.get(`/api/v1/programs/${idlName}`, handleDiscoveryRequest);
+        app.get(`/api/v1/programs/${programId}`, handleDiscoveryRequest);
     }
 }

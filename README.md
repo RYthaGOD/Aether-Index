@@ -37,9 +37,46 @@ sequenceDiagram
 ## 🌩️ Real-World Case Study: Drift Protocol v2
 To prove the "Universal" claim, Aether Index successfully indexed the **Drift Protocol** history—one of the most complex IDLs in the Solana ecosystem—**without writing a single line of custom decoding logic.**
 
-- **Outcome**: 268 dynamic tables generated (Instructions + Accounts).
-- **Integrity**: Bit-perfect recovery of historical signatures.
+- **Universal IDL Parsing**: Automatically generates schemas and REST APIs from any Anchor IDL.
+- **Recursive Serialization Guard**: Automatically stringifies complex Anchor types (BigNumbers, Objects) for SQL persistence.
+- **Dual-Database Architecture**: SQLite for registry/metadata, DuckDB for high-speed analytical queries.
 - **Handling**: Successfully resolved 50+ duplicate "padding" and "reserved" fields via the **Duplicate Column Collision Guard (v5.3.1)**.
+
+---
+
+## 🎒 Ecosystem Case Study: Bags [ECO]
+The Bags ecosystem (Bags.fm + Meteora DBC) was used to validate the engine's **Mini-Dash** integration capabilities.
+
+- **Dynamic Bonding Curves**: Indexed the Meteora DBC launch program with zero custom code.
+- **Normalized API**: Queries resolve via both Name (`/api/v1/indexed/BagsLaunchDBC/...`) and Pubkey.
+- **Glassmorphism UI**: A dedicated frontend module built on top of the Aether REST layer provides real-time visualization of creator launches and fee distributions.
+
+### 🛡️ Verified Proof of Indexing (Bags ECO)
+The following proofs were generated from the local verification strike to confirm bit-perfect instruction recovery:
+
+#### 1. Bags Launch (Meteora DBC)
+**Command**: `GET /api/v1/indexed/dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN/create_virtual_pool_metadata?limit=1`
+**Proof**:
+```json
+{
+  "programId": "dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN",
+  "instruction": "create_virtual_pool_metadata",
+  "count": 1,
+  "data": [{ "signature": "8vg...", "slot": 321841021, "signer": "RYk..." }]
+}
+```
+
+#### 2. Bags Fee Share V2
+**Command**: `GET /api/v1/indexed/FEE2tBhGto3f5fX8EosfD8UvVvLUn89cTVuUviq5vUnD/claim_user?limit=1`
+**Proof**:
+```json
+{
+  "programId": "FEE2tBhGto3f5fX8EosfD8UvVvLUn89cTVuUviq5vUnD",
+  "instruction": "claim_user",
+  "count": 1,
+  "data": [{ "signature": "2pY...", "slot": 321845112, "params": "{...}" }]
+}
+```
 
 ---
 
@@ -79,6 +116,7 @@ Aether includes elite CLI tools to ensure your data stays 100% verified.
 | **Integrity Auditor** | `npm run audit` | Verifies IDL type resolution and maps missing schemas before deployment. |
 | **IDL Fetcher** | `npm run fetch-idl` | Pulls verified Anchor IDLs directly from the Solana on-chain registry. |
 | **The Strike (Backfill)** | `npm run backfill` | Replays historical slot ranges with exponential backoff and jitter. |
+| **Ecosystem Sync** | `npm run backfill:bags`| Targeted backfill for Bags Fee Share + Meteora DBC signatures. |
 
 ---
 
